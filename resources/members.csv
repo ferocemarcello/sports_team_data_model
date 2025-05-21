@@ -1,7 +1,7 @@
 membership_id,group_id,role_title,joined_at
-member_001,team_001,admin,2023-01-15 10:05:00 UTC
-member_002,team_001,member,2023-01-15 10:10:00 UTC
-member_003,team_002,member,2023-01-16 11:35:00 UTC
-member_004,team_003,admin,2023-01-17 12:50:00 UTC
-member_005,team_001,member,2023-01-19 09:20:00 UTC
-member_006,team_004,member,2023-01-18 14:05:00 UTC
+member_001,team_001,admin,1673777100
+member_002,team_001,member,1673777400
+member_003,team_002,member,1673868900
+member_004,team_003,admin,1673959800
+member_005,team_001,member,1674120000
+member_006,team_004,member,1674050700

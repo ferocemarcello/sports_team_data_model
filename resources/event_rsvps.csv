@@ -1,8 +1,8 @@
 event_rsvp_id,event_id,member_id,rsvp_status,responded_at
-rsvp_001,event_101,member_001,1,2023-01-25 10:00:00 UTC
-rsvp_002,event_101,member_002,2,2023-01-26 11:00:00 UTC
-rsvp_003,event_102,member_003,1,2023-01-27 12:00:00 UTC
-rsvp_004,event_103,member_001,0,2023-01-28 13:00:00 UTC
-rsvp_005,event_103,member_005,1,2023-01-29 14:00:00 UTC
-rsvp_006,event_104,member_004,1,2023-01-30 15:00:00 UTC
-rsvp_007,event_105,member_006,1,2023-01-31 16:00:00 UTC
+rsvp_001,event_101,member_001,1,1674640800
+rsvp_002,event_101,member_002,2,1674730800
+rsvp_003,event_102,member_003,1,1674820800
+rsvp_004,event_103,member_001,0,1674910800
+rsvp_005,event_103,member_005,1,1675000800
+rsvp_006,event_104,member_004,1,1675090800
+rsvp_007,event_105,member_006,1,1675180800

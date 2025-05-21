@@ -1,6 +1,6 @@
 team_id,group_activity,country_code,created_at
-team_001,football,NOR,2023-01-15 10:00:00 UTC
-team_002,cricket,GBR,2023-01-16 11:30:00 UTC
-team_003,rugby,GBR,2023-01-17 12:45:00 UTC
-team_004,basketball,NOR,2023-01-18 14:00:00 UTC
-team_005,football,NOR,2023-01-19 09:15:00 UTC
+team_001,football,NOR,1673776800
+team_002,cricket,GBR,1673868600
+team_003,rugby,GBR,1673959500
+team_004,basketball,NOR,1674050400
+team_005,football,NOR,1674119700
