@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    container_name: spond_postgres_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: spond_db
+      POSTGRES_USER: spond_user
+      POSTGRES_PASSWORD: spond_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  ingestion_app:
+    build: .
+    container_name: spond_ingestion_app
+    environment:
+      PG_HOST: db
+      PG_PORT: 5432
+      PG_DB: spond_db
+      PG_USER: spond_user
+      PG_PASSWORD: spond_password
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no" 
+
+volumes:
+  postgres_data:
