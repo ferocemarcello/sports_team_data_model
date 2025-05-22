@@ -1,4 +1,3 @@
-# teams.csv
 team_id,group_activity,country_code,created_at
 team_001,football,NOR,2023-01-15 10:00:00+00:00
 team_002,cricket,GBR,2023-01-20 11:30:00+00:00
