@@ -1,27 +1,6 @@
-# Sports Team Data Model
-
-This project demonstrates a solution for ingesting and transforming data about members, teams, and events for analytics, focusing on data ingestion, modeling, and foundational aspects for production readiness.
-
-## Project Structure
-
-```
-spond_project/
-├── data/
-│   ├── teams.csv
-│   ├── members.csv
-│   ├── events.csv
-│   └── event_rsvps.csv
-├── terraform/
-│   └── main.tf
-├── Dockerfile
-├── requirements.txt
-├── ingest_data.py
-└── run_ingestion.sh
-```
-
 ## Data Description
 
-The project utilizes three sample datasets in CSV format: `teams`, `members`, `events`, and `event_rsvps`. The schema for these tables is as follows:
+The project utilizes three sample datasets in CSV format. The schema for these tables is as follows:
 
 | Table         | Column              | Description                                                                 |
 |---------------|---------------------|-----------------------------------------------------------------------------|
@@ -30,17 +9,17 @@ The project utilizes three sample datasets in CSV format: `teams`, `members`, `e
 |               | `country_code` (string) | Alpha-3 country code of group e.g., NOR=Norway; GBR=United Kingdom; etc. |
 |               | `created_at` (UTC timestamp) | System generated creation timestamp                                       |
 | `members`     | `membership_id`     | Unique ID                                                                   |
-|               | `group_id`          | Foreign Key (references `teams.team_id`)                                    |
+|               | `group_id`          | Foreign Key                                                                 |
 |               | `role_title` (string) | member or admin                                                             |
 |               | `joined_at` (UTC timestamp) | System generated creation timestamp                                       |
 | `events`      | `event_id`          | Unique ID                                                                   |
-|               | `team_id`           | Foreign Key (references `teams.team_id`)                                    |
+|               | `team_id`           | Foreign Key                                                                 |
 |               | `event_start` (UTC timestamp) | User-defined event start timestamp                                          |
 |               | `event_end` (UTC timestamp)   | User-defined event end timestamp                                            |
 |               | `created_at` (UTC timestamp) | System generated creation timestamp                                       |
 | `event_rsvps` | `event_rsvp_id`     | Unique ID                                                                   |
-|               | `event_id`          | Foreign Key (references `events.event_id`)                                  |
-|               | `member_id`         | Foreign Key (references `members.membership_id`)                            |
+|               | `event_id`          | Foreign Key                                                                 |
+|               | `member_id`         | Foreign Key                                                                 |
 |               | `rsvp_status`       | Enum (0=unanswered; 1=accepted; 2=declined)                                 |
 |               | `responded_at` (UTC timestamp) | System generated creation timestamp                                       |
 
@@ -84,11 +63,19 @@ To fix this:
 
 ### 2. Project Structure
 
-Ensure your project directory is organized as described in the "Project Structure" section above. Specifically, place your sample CSV files (`teams.csv`, `members.csv`, `events.csv`, `event_rsvps.csv`) inside the `data/` subdirectory.
+Ensure your project directory is organized as described in the "Project Structure" section above. Specifically, place your sample CSV files (`teams.csv`, `members.csv`, `events.csv`, `event_rsvps.csv`) AND the new `schema.sql` file inside the `data/` subdirectory.
 
 ### 3. Execution
 
 Follow these steps from your terminal, in the root directory of your `spond_project`:
+
+* **Initialize Terraform (Crucial after any `main.tf` or provider changes):**
+    First, navigate to the `terraform` directory and run `terraform init`. This will download the correct provider and set up the backend.
+    ```bash
+    cd terraform
+    terraform init
+    cd .. # Go back to the project root
+    ```
 
 * **Make the shell script executable:**
     ```bash
@@ -103,7 +90,7 @@ Follow these steps from your terminal, in the root directory of your `spond_proj
 This script will perform the following actions:
 
 1.  **Start a PostgreSQL Docker container:** A local PostgreSQL instance will be launched, accessible on `localhost:5432`.
-2.  **Initialize and Apply Terraform:** Terraform will initialize its configuration and then apply `main.tf` to create the `spond_analytics` database and the necessary tables (`teams`, `members`, `events`, `event_rsvps`), including their foreign key constraints.
+2.  **Initialize and Apply Terraform:** Terraform will initialize its configuration and then apply `main.tf` to create the `spond_analytics` database and execute the `schema.sql` file to create the necessary tables, including their foreign key constraints.
 3.  **Build Docker Image:** A Docker image named `spond-data-ingester` will be built, containing the Python ingestion script and its dependencies.
 4.  **Run Ingestion Container:** The `spond-data-ingester` container will be run. It will connect to the local PostgreSQL database and ingest the data from the CSV files located in the `data` directory.
 5.  **Completion Message:** You will see messages indicating the progress and completion of the data ingestion process.
