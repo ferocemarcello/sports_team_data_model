@@ -1,4 +1,3 @@
-# event_rsvps.csv
 event_rsvp_id,event_id,member_id,rsvp_status,responded_at
 rsvp_001,event_001,member_001,1,2023-01-18 10:00:00+00:00
 rsvp_002,event_001,member_002,1,2023-01-18 10:05:00+00:00
