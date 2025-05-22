@@ -1,4 +1,4 @@
-# Spond Data Ingestion Project
+# Sports Team Data Model
 
 This project demonstrates a solution for ingesting and transforming data about members, teams, and events for analytics, focusing on data ingestion, modeling, and foundational aspects for production readiness.
 
