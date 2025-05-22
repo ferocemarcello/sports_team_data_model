@@ -1,8 +1,16 @@
+# event_rsvps.csv
 event_rsvp_id,event_id,member_id,rsvp_status,responded_at
-rsvp_001,event_101,member_001,1,1674640800
-rsvp_002,event_101,member_002,2,1674730800
-rsvp_003,event_102,member_003,1,1674820800
-rsvp_004,event_103,member_001,0,1674910800
-rsvp_005,event_103,member_005,1,1675000800
-rsvp_006,event_104,member_004,1,1675090800
-rsvp_007,event_105,member_006,1,1675180800
+rsvp_001,event_001,member_001,1,2023-01-18 10:00:00+00:00
+rsvp_002,event_001,member_002,1,2023-01-18 10:05:00+00:00
+rsvp_003,event_002,member_003,0,
+rsvp_004,event_003,member_001,2,2023-02-02 11:00:00+00:00
+rsvp_005,event_003,member_006,1,2023-02-03 09:00:00+00:00
+rsvp_006,event_004,member_005,1,2023-02-13 10:00:00+00:00
+rsvp_007,event_005,member_004,0,
+rsvp_008,event_006,member_007,1,2023-03-08 15:00:00+00:00
+rsvp_009,event_007,member_002,1,2023-04-06 14:00:00+00:00
+rsvp_010,event_007,member_001,0,
+rsvp_011,event_007,member_006,2,2023-04-07 10:00:00+00:00
+rsvp_012,event_008,member_008,1,2023-04-13 09:00:00+00:00
+rsvp_013,event_009,member_009,1,2023-04-18 13:00:00+00:00
+rsvp_014,event_010,member_010,0,
