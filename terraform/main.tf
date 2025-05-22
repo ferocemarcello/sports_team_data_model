@@ -3,8 +3,8 @@
 terraform {
   required_providers {
     postgresql = {
-      source  = "dbt-labs/postgresql"
-      version = "~> 1.0" # Use a compatible version
+      source  = "cyrilgdn/postgresql"
+      version = "~> 1.25.0"
     }
   }
 }
