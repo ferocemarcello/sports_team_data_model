@@ -4,6 +4,7 @@ This project demonstrates a solution for ingesting and transforming data about m
 
 ## Project Structure
 
+```
 spond_project/
 ├── data/
 │   ├── teams.csv
@@ -16,6 +17,7 @@ spond_project/
 ├── requirements.txt
 ├── ingest_data.py
 └── run_ingestion.sh
+```
 
 ## Data Description
 
