@@ -63,6 +63,25 @@ Before you begin, ensure you have the following installed on your system:
 * **Docker:** Used for containerizing the PostgreSQL database and the Python ingestion application.
 * **Terraform:** Used for provisioning the PostgreSQL database and tables.
 
+#### Docker Permissions
+
+If you encounter a `permission denied` error when running Docker commands (e.g., `docker: permission denied while trying to connect to the Docker daemon socket`), it means your user account doesn't have the necessary permissions.
+
+To fix this:
+
+1.  **Add your user to the `docker` group:**
+    ```bash
+    sudo usermod -aG docker $USER
+    ```
+2.  **Apply the new group membership:**
+    You must either **log out and log back in** to your system, or **reboot** it, for the group changes to take effect.
+3.  **Verify Docker is working (optional but recommended):**
+    After logging back in, open a new terminal and run:
+    ```bash
+    docker run hello-world
+    ```
+    If you see a "Hello from Docker!" message, you're good to go.
+
 ### 2. Project Structure
 
 Ensure your project directory is organized as described in the "Project Structure" section above. Specifically, place your sample CSV files (`teams.csv`, `members.csv`, `events.csv`, `event_rsvps.csv`) inside the `data/` subdirectory.
