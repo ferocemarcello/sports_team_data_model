@@ -101,6 +101,12 @@ done
 
 echo "--- psql verification complete. Proceeding with dbt build ---"
 
+echo "Cleaning dbt artifacts..."
+docker-compose run --rm dbt-cli dbt clean --project-dir /usr/app/dbt_project
+if [ $? -ne 0 ]; then
+  echo "dbt clean failed."
+  exit 1
+fi
 
 # 6. Run dbt to build models and tests
 echo "Running dbt transformations and tests..."
