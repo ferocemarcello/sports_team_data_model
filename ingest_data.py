@@ -4,7 +4,8 @@ import psycopg2
 from datetime import datetime
 
 # Database connection details from environment variables
-DB_HOST = os.getenv('DB_HOST', 'localhost')
+# CHANGE THIS LINE: 'localhost' to 'db'
+DB_HOST = os.getenv('DB_HOST', 'db')
 DB_PORT = os.getenv('DB_PORT', '5432')
 DB_NAME = os.getenv('DB_NAME', 'spond_analytics')
 DB_USER = os.getenv('DB_USER', 'postgres')
@@ -129,9 +130,9 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
                 conn.rollback()
                 continue
 
-    print(f"Attempting to commit data for {table_name}.") # New print
+    print(f"Attempting to commit data for {table_name}.")
     conn.commit()
-    print(f"Data for {table_name} committed to database.") # New print
+    print(f"Data for {table_name} committed to database.")
     cursor.close()
     print(f"Successfully ingested {ingested_rows} rows into {table_name} from {csv_file_path}.")
     if skipped_fk_violations > 0:
@@ -150,7 +151,7 @@ def main():
     try:
         conn = get_db_connection()
 
-        setup_database(conn)
+        setup_database(conn) # Keep this call; it ensures tables exist
 
         # Define column mappings for each table
         teams_cols = {
