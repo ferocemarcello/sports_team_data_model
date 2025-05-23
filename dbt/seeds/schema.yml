@@ -4,9 +4,9 @@ seeds:
     columns:
       - name: name
         description: "The full country name."
-      - name: alpha-2
+      - name: alpha_two
         description: "The 2-letter Alpha-2 country code."
-      - name: alpha-3
+      - name: alpha_three
         description: "The 3-letter Alpha-3 country code. Used for filtering teams."
         tests:
           - not_null
