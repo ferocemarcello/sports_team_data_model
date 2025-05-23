@@ -42,15 +42,6 @@ models:
           - relationships:
               to: ref('stg_teams')
               field: team_id
-      # REMOVE these two column definitions and their tests:
-      # - name: member_id
-      #   description: Identifier for the member.
-      #   tests:
-      #     - not_null
-      # - name: is_admin
-      #   description: Boolean indicating if the member is an admin.
-      #
-      # After removal, your stg_memberships columns section should look like this:
       - name: role_title # Add this line to document the column from CSV
         description: Role title of the member in the team.
       - name: joined_at # Add this line to document the column from CSV
