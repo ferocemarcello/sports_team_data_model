@@ -67,7 +67,9 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
     """Generic function to ingest data from a CSV into a specified table."""
     cursor = conn.cursor()
     ingested_rows = 0
-    skipped_rows = 0
+    skipped_fk_violations = 0  # Counter for foreign key violations
+    skipped_other_db_errors = 0 # Counter for other database errors
+    skipped_general_errors = 0 # Counter for general Python errors
 
     # Determine the primary key column name for logging, assuming first column in mapping is PK
     pk_col_name_csv = next(iter(columns_mapping))
@@ -103,8 +105,7 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
 
             except psycopg2.errors.ForeignKeyViolation as e:
                 # Suppress detailed print for ForeignKeyViolation (23503)
-                # Still count as skipped row and rollback
-                skipped_rows += 1
+                skipped_fk_violations += 1
                 conn.rollback()
                 continue
             except psycopg2.Error as e:
@@ -115,26 +116,33 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
                 print(f"  PostgreSQL Error Message: {e.pgerror.strip()}")
                 print(f"  Problematic row data: {row}")
                 print("--------------------------------------------------")
-                skipped_rows += 1
+                skipped_other_db_errors += 1
                 conn.rollback()
                 continue
             except Exception as e:
-                # Catch any other general exceptions
+                # Catch any other general exceptions (e.g., ValueError during type conversion)
                 print(f"--- Unexpected Error ingesting row {i+1} into {table_name} from {csv_file_path} ---")
                 print(f"  Row PK ({pk_col_name_db}): {row.get(pk_col_name_csv)}")
                 print(f"  Error Type: {type(e).__name__}")
                 print(f"  Error Message: {e}")
                 print(f"  Problematic row data: {row}")
                 print("--------------------------------------------------")
-                skipped_rows += 1
+                skipped_general_errors += 1
                 conn.rollback()
                 continue
 
     conn.commit()
     cursor.close()
     print(f"Successfully ingested {ingested_rows} rows into {table_name} from {csv_file_path}.")
-    if skipped_rows > 0:
-        print(f"Skipped {skipped_rows} rows due to errors in {csv_file_path}.")
+    if skipped_fk_violations > 0:
+        print(f"  Skipped {skipped_fk_violations} rows due to Foreign Key violations.")
+    if skipped_other_db_errors > 0:
+        print(f"  Skipped {skipped_other_db_errors} rows due to other database errors.")
+    if skipped_general_errors > 0:
+        print(f"  Skipped {skipped_general_errors} rows due to general errors.")
+    total_skipped = skipped_fk_violations + skipped_other_db_errors + skipped_general_errors
+    if total_skipped > 0:
+        print(f"  Total skipped rows: {total_skipped}.")
 
 
 def main():
@@ -153,7 +161,7 @@ def main():
         }
         memberships_cols = {
             'membership_id': ('membership_id', 'str'),
-            'team_id': ('team_id', 'str'), # Changed: Map CSV's 'team_id' directly to DB's 'team_id'
+            'team_id': ('team_id', 'str'),
             'role_title': ('role_title', 'str'),
             'joined_at': ('joined_at', 'timestamp')
         }
