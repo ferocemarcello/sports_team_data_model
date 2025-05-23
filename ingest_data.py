@@ -1,136 +1,182 @@
 import csv
-import json
-import sqlite3
+import os
+import psycopg2
 from datetime import datetime
 
-# Assuming these are correct from previous context
-DATABASE_FILE = 'data/spond_data.db'
+# Database connection details from environment variables
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_NAME = os.getenv('DB_NAME', 'spond_analytics')
+DB_USER = os.getenv('DB_USER', 'postgres')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'postgres')
+
 SCHEMA_FILE = 'data/schema.sql'
 
-def get_current_timestamp():
-    """Returns the current Unix epoch timestamp in seconds."""
-    return int(datetime.now().timestamp())
+def get_db_connection():
+    """Establishes and returns a PostgreSQL database connection."""
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        print("Successfully connected to PostgreSQL.")
+        return conn
+    except psycopg2.Error as e:
+        print(f"Error connecting to PostgreSQL: {e}")
+        raise
 
 def parse_iso_timestamp(iso_string):
     """Parses an ISO 8601 timestamp string and returns Unix epoch seconds."""
     if not iso_string:
         return None
-    # Remove 'Z' if present and parse
-    dt_object = datetime.fromisoformat(iso_string.replace('Z', '+00:00'))
-    return int(dt_object.timestamp())
+    try:
+        # datetime.fromisoformat handles various ISO 8601 formats, including 'Z' and timezone offsets.
+        dt_object = datetime.fromisoformat(iso_string.replace('Z', '+00:00'))
+        return int(dt_object.timestamp())
+    except ValueError as e:
+        print(f"Warning: Could not parse timestamp '{iso_string}': {e}")
+        return None
+
 
 def setup_database(conn):
     """Initializes the database schema."""
+    cursor = conn.cursor()
     with open(SCHEMA_FILE, 'r') as f:
         schema_sql = f.read()
-    conn.executescript(schema_sql)
+    
+    # Execute each statement separately
+    # This is important for psycopg2 which doesn't support multiple statements directly with execute()
+    # It also helps catch errors in individual statements.
+    for statement in schema_sql.split(';'):
+        if statement.strip(): # Ensure not to execute empty statements
+            try:
+                cursor.execute(statement)
+            except psycopg2.Error as e:
+                # Catch specific error for "relation already exists" from IF NOT EXISTS
+                if 'already exists' in str(e) and 'CREATE TABLE IF NOT EXISTS' in statement:
+                    print(f"Table already exists, skipping: {statement.strip().splitlines()[0]}...")
+                    conn.rollback() # Rollback the current transaction if an error occurs
+                else:
+                    print(f"Error executing schema statement: {statement.strip()}")
+                    raise e
     conn.commit()
+    cursor.close()
+    print("Database schema initialized (or verified if tables existed).")
 
-def ingest_teams(conn, csv_file_path):
-    """Ingests data into the teams table."""
+
+def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, timestamp_cols):
+    """Generic function to ingest data from a CSV into a specified table."""
     cursor = conn.cursor()
+    ingested_rows = 0
+    skipped_rows = 0
+
     with open(csv_file_path, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
-        for row in reader:
-            team_id = row['team_id']
-            team_activity = row['team_activity']
-            country_code = row['country_code']
-            created_at = parse_iso_timestamp(row['created_at'])
+        for i, row in enumerate(reader):
+            try:
+                # Prepare data for insertion
+                values = []
+                for csv_col, db_col_info in columns_mapping.items():
+                    db_col_name = db_col_info[0]
+                    col_type = db_col_info[1] # e.g., 'str', 'int', 'float', 'timestamp'
 
-            cursor.execute("""
-                INSERT OR IGNORE INTO teams (team_id, team_activity, country_code, created_at)
-                VALUES (?, ?, ?, ?)
-            """, (team_id, team_activity, country_code, created_at))
+                    value = row.get(csv_col)
+
+                    if db_col_name in timestamp_cols:
+                        values.append(parse_iso_timestamp(value))
+                    elif col_type == 'int':
+                        values.append(int(value) if value else None)
+                    elif col_type == 'float':
+                        # Handle 'null' string from CSV or empty strings
+                        values.append(float(value) if value and value.lower() != 'null' else None)
+                    else: # Default to string
+                        values.append(value)
+                
+                # Construct INSERT statement dynamically
+                db_column_names = [info[0] for info in columns_mapping.values()]
+                placeholders = ', '.join(['%s'] * len(db_column_names))
+                insert_sql = f"INSERT INTO {table_name} ({', '.join(db_column_names)}) VALUES ({placeholders}) ON CONFLICT DO NOTHING;"
+                
+                cursor.execute(insert_sql, values)
+                ingested_rows += 1
+
+            except Exception as e:
+                print(f"Error ingesting row {i+1} from {csv_file_path} into {table_name}: {e}")
+                print(f"Problematic row: {row}")
+                skipped_rows += 1
+                conn.rollback() # Rollback the current transaction for this row to continue with next
+                continue # Continue to the next row
+
     conn.commit()
-    print(f"Successfully ingested data into teams from {csv_file_path}")
+    cursor.close()
+    print(f"Successfully ingested {ingested_rows} rows into {table_name} from {csv_file_path}.")
+    if skipped_rows > 0:
+        print(f"Skipped {skipped_rows} rows due to errors in {csv_file_path}.")
 
-def ingest_memberships(conn, csv_file_path):
-    """Ingests data into the memberships table."""
-    cursor = conn.cursor()
-    with open(csv_file_path, 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            membership_id = row['membership_id']
-            team_id = row['group_id'] # CSV uses 'group_id', maps to 'team_id' in DB
-            role_title = row['role_title']
-            joined_at = parse_iso_timestamp(row['joined_at'])
-
-            cursor.execute("""
-                INSERT OR IGNORE INTO memberships (membership_id, team_id, role_title, joined_at)
-                VALUES (?, ?, ?, ?)
-            """, (membership_id, team_id, role_title, joined_at))
-    conn.commit()
-    print(f"Successfully ingested data into memberships from {csv_file_path}")
-
-
-def ingest_events(conn, csv_file_path):
-    """Ingests data into the events table."""
-    cursor = conn.cursor()
-    with open(csv_file_path, 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            event_id = row['event_id']
-            team_id = row['team_id']
-            event_start = parse_iso_timestamp(row['event_start'])
-            event_end = parse_iso_timestamp(row['event_end'])
-            created_at = parse_iso_timestamp(row['created_at'])
-
-            # Handle new latitude and longitude fields, converting 'null' strings to None
-            latitude = float(row['latitude']) if row['latitude'] and row['latitude'].lower() != 'null' else None
-            longitude = float(row['longitude']) if row['longitude'] and row['longitude'].lower() != 'null' else None
-
-            cursor.execute("""
-                INSERT OR IGNORE INTO events (event_id, team_id, event_start, event_end, created_at, latitude, longitude)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (event_id, team_id, event_start, event_end, created_at, latitude, longitude))
-    conn.commit()
-    print(f"Successfully ingested data into events from {csv_file_path}")
-
-
-def ingest_event_rsvps(conn, csv_file_path):
-    """Ingests data into the event_rsvps table."""
-    cursor = conn.cursor()
-    with open(csv_file_path, 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            event_rsvp_id = row['event_rsvp_id']
-            event_id = row['event_id']
-            member_id = row['membership_id'] # Note: CSV uses 'membership_id'
-            rsvp_status = int(row['rsvp_status'])
-            responded_at = parse_iso_timestamp(row['responded_at'])
-
-            cursor.execute("""
-                INSERT OR IGNORE INTO event_rsvps (event_rsvp_id, event_id, member_id, rsvp_status, responded_at)
-                VALUES (?, ?, ?, ?, ?)
-            """, (event_rsvp_id, event_id, member_id, rsvp_status, responded_at))
-    conn.commit()
-    print(f"Successfully ingested data into event_rsvps from {csv_file_path}")
 
 def main():
     conn = None
     try:
-        conn = sqlite3.connect(DATABASE_FILE) # Note: This is still using SQLite, not PostgreSQL.
-                                              # The `run_ingestion.sh` script should be updated to pass DB_HOST, DB_PORT etc.
-                                              # for connecting to PostgreSQL.
-        setup_database(conn) # This will create the schema in the SQLite DB, not PostgreSQL.
+        conn = get_db_connection()
+        
+        # Setup database schema - this will re-create tables if they don't exist
+        # or if the schema hash in terraform.tfstate changes.
+        setup_database(conn)
 
-        # Ingest data from the provided CSV files
-        ingest_teams(conn, 'data/teams.csv')
-        ingest_memberships(conn, 'data/memberships.csv') # Changed from ingest_members
-        ingest_events(conn, 'data/events.csv')
-        ingest_event_rsvps(conn, 'data/event_rsvps.csv')
+        # Define column mappings for each table
+        teams_cols = {
+            'team_id': ('team_id', 'str'),
+            'team_activity': ('team_activity', 'str'), # Renamed from group_activity
+            'country_code': ('country_code', 'str'),
+            'created_at': ('created_at', 'timestamp')
+        }
+        memberships_cols = { # Table renamed to memberships
+            'membership_id': ('membership_id', 'str'),
+            'group_id': ('team_id', 'str'), # CSV 'group_id' maps to DB 'team_id'
+            'role_title': ('role_title', 'str'),
+            'joined_at': ('joined_at', 'timestamp')
+        }
+        events_cols = {
+            'event_id': ('event_id', 'str'),
+            'team_id': ('team_id', 'str'),
+            'event_start': ('event_start', 'timestamp'),
+            'event_end': ('event_end', 'timestamp'),
+            'created_at': ('created_at', 'timestamp'),
+            'latitude': ('latitude', 'float'), # New column
+            'longitude': ('longitude', 'float') # New column
+        }
+        event_rsvps_cols = {
+            'event_rsvp_id': ('event_rsvp_id', 'str'),
+            'event_id': ('event_id', 'str'),
+            'membership_id': ('member_id', 'str'), # CSV 'membership_id' maps to DB 'member_id'
+            'rsvp_status': ('rsvp_status', 'int'),
+            'responded_at': ('responded_at', 'timestamp')
+        }
 
-        print("Data ingestion complete.")
+        # List of columns that require timestamp parsing
+        timestamp_columns = ['created_at', 'joined_at', 'event_start', 'event_end', 'responded_at']
 
-    except sqlite3.Error as e:
-        print(f"SQLite error: {e}")
+        # Ingest data using the generic function
+        ingest_data_from_csv(conn, 'data/teams.csv', 'teams', teams_cols, timestamp_columns)
+        ingest_data_from_csv(conn, 'data/memberships.csv', 'memberships', memberships_cols, timestamp_columns)
+        ingest_data_from_csv(conn, 'data/events.csv', 'events', events_cols, timestamp_columns)
+        ingest_data_from_csv(conn, 'data/event_rsvps.csv', 'event_rsvps', event_rsvps_cols, timestamp_columns)
+
+        print("\nData ingestion complete.")
+
+    except psycopg2.Error as e:
+        print(f"\nDatabase error during main execution: {e}")
     except FileNotFoundError as e:
-        print(f"File not found: {e}. Make sure CSV files and schema.sql are in the 'data/' directory.")
+        print(f"\nFile not found error: {e}. Make sure CSV files and schema.sql are in the 'data/' directory.")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"\nAn unexpected error occurred during main execution: {e}")
     finally:
         if conn:
             conn.close()
+            print("Database connection closed.")
 
 if __name__ == "__main__":
     main()
