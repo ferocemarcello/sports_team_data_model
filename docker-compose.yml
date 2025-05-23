@@ -48,20 +48,22 @@ services:
     container_name: spond-dbt-cli
     depends_on:
       db:
-        condition: service_healthy # Ensure DB is ready for dbt
+        condition: service_healthy
     environment:
-      DBT_POSTGRES_HOST: db # Hostname for services within Docker network
+      DBT_POSTGRES_HOST: db
       DBT_POSTGRES_PORT: 5432
       DBT_POSTGRES_USER: postgres
       DBT_POSTGRES_PASSWORD: postgres
       DBT_POSTGRES_DBNAME: spond_analytics
-      DBT_POSTGRES_SCHEMA: public # Default schema for dbt to build into
+      DBT_POSTGRES_SCHEMA: public
     volumes:
-      - ./dbt:/usr/app/dbt # Mount the dbt project into the container
-      - ./dbt/profiles.yml:/root/.dbt/profiles.yml:ro # Mount profiles.yml
-    working_dir: /usr/app/dbt # Set working directory to the dbt project root
-    entrypoint: dbt # This was changed in previous step, now we will call the python dbt directly
-    command: python -m dbt run # <--- CHANGE THIS LINE: Use 'python -m dbt run' instead of just 'dbt'
+      - ./dbt:/usr/app/dbt
+      - ./dbt/profiles.yml:/root/.dbt/profiles.yml:ro
+    working_dir: /usr/app/dbt
+    # REMOVE THIS LINE:
+    # entrypoint: dbt
+    command: python -m dbt build # <--- Ensure this is 'build' as per your shell script
+                                 # (or 'run' if you prefer just to run models)
 
 volumes:
   postgres_data:
