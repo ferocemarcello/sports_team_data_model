@@ -1,6 +1,5 @@
 -- data/schema.sql
 -- Create teams table
--- Note: group_activity renamed to team_activity; created_at uses BIGINT for Unix epoch seconds
 CREATE TABLE IF NOT EXISTS teams (
     team_id VARCHAR(255) PRIMARY KEY,
     team_activity VARCHAR(255) NOT NULL,
@@ -9,7 +8,6 @@ CREATE TABLE IF NOT EXISTS teams (
 );
 
 -- Create memberships table (formerly members)
--- Note: group_id renamed to team_id and references teams(team_id); joined_at uses BIGINT for Unix epoch seconds
 CREATE TABLE IF NOT EXISTS memberships (
     membership_id VARCHAR(255) PRIMARY KEY,
     team_id VARCHAR(255) NOT NULL,
@@ -19,7 +17,6 @@ CREATE TABLE IF NOT EXISTS memberships (
 );
 
 -- Create events table
--- Note: event_start, event_end, created_at use BIGINT for Unix epoch seconds; added latitude and longitude
 CREATE TABLE IF NOT EXISTS events (
     event_id VARCHAR(255) PRIMARY KEY,
     team_id VARCHAR(255) NOT NULL,
@@ -32,7 +29,6 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 -- Create event_rsvps table
--- Note: member_id now references memberships(membership_id); responded_at uses BIGINT for Unix epoch seconds
 CREATE TABLE IF NOT EXISTS event_rsvps (
     event_rsvp_id VARCHAR(255) PRIMARY KEY,
     event_id VARCHAR(255) NOT NULL,
