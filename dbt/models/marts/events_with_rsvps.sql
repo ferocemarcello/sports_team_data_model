@@ -1,3 +1,4 @@
+-- dbt/models/marts/events_with_rsvps.sql
 WITH event_rsvps_agg AS (
     SELECT
         event_id,
@@ -13,9 +14,9 @@ WITH event_rsvps_agg AS (
 
 SELECT
     e.event_id,
-    e.event_start, -- Changed from e.event_name and e.event_time
+    e.event_time,  -- CORRECTED: Change this line back to e.event_time
     e.event_end,
-    e.latitude,    -- Changed from e.location
+    e.latitude,
     e.longitude,
     COALESCE(era.total_rsvps, 0) AS total_rsvps,
     COALESCE(era.accepted_rsvps, 0) AS accepted_rsvps,

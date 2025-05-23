@@ -1,10 +1,9 @@
+-- dbt/models/staging/stg_event_rsvps.sql
 SELECT
-    rsvps.event_rsvp_id AS rsvp_id,
-    rsvps.event_id,
-    rsvps.membership_id, -- Corrected: from member_id to membership_id
-    rsvps.rsvp_status AS status,
-    rsvps.responded_at AS rsvp_time -- Corrected: from rsvp_time to responded_at
-FROM "spond_analytics"."public"."raw_event_rsvps" AS rsvps
-INNER JOIN "spond_analytics"."public"."raw_events" AS events
-  ON rsvps.event_id = events.event_id
-WHERE rsvps.rsvp_status IN ('accepted', 'declined', 'pending')
+    event_rsvp_id AS rsvp_id,
+    event_id,
+    membership_id,
+    rsvp_status AS status,
+    responded_at AS rsvp_time
+FROM "spond_analytics"."public"."raw_event_rsvps"
+WHERE rsvp_status IN ('accepted', 'declined', 'pending') -- Keep this filter
