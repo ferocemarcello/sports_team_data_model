@@ -23,7 +23,7 @@ models:
           - relationships:
               to: ref('stg_memberships')
               field: membership_id # Assuming you have a membership_id in stg_memberships
-      - name: status # This is the renamed column from rsvp_status
+      - name: rsvp_status
         description: RSVP status (accepted, declined, pending).
         tests:
           - accepted_values:

@@ -3,9 +3,9 @@ WITH event_rsvps_agg AS (
     SELECT
         event_id,
         COUNT(event_rsvp_id) AS total_rsvps,
-        COUNT(CASE WHEN status = 'accepted' THEN event_rsvp_id END) AS accepted_rsvps,
-        COUNT(CASE WHEN status = 'declined' THEN event_rsvp_id END) AS declined_rsvps,
-        COUNT(CASE WHEN status = 'pending' THEN event_rsvp_id END) AS pending_rsvps
+        COUNT(CASE WHEN rsvp_status = 'accepted' THEN event_rsvp_id END) AS accepted_rsvps,
+        COUNT(CASE WHEN rsvp_status = 'declined' THEN event_rsvp_id END) AS declined_rsvps,
+        COUNT(CASE WHEN rsvp_status = 'pending' THEN event_rsvp_id END) AS pending_rsvps
     FROM
         {{ ref('stg_event_rsvps') }}
     GROUP BY
