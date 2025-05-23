@@ -1,6 +1,5 @@
 {{ config(
-    materialized='table',
-    schema='public'
+    materialized='table'   -- Keep this line to ensure it's a table
 )}}
 
 SELECT
