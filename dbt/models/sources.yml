@@ -14,5 +14,3 @@ sources:
         identifier: events
       - name: raw_event_rsvps
         identifier: event_rsvps
-      - name: raw_country_codes
-        identifier: country_codes

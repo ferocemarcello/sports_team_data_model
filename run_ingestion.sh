@@ -101,6 +101,13 @@ done
 
 echo "--- psql verification complete. Proceeding with dbt build ---"
 
+echo "Running dbt seed to load static data..."
+docker-compose run --rm dbt-cli dbt seed --project-dir /usr/app/dbt
+if [ $? -ne 0 ]; then
+  echo "dbt seed failed."
+  exit 1
+fi
+
 # --- START: MODIFIED SECTION FOR DBT CLEAN ---
 echo "Cleaning dbt artifacts..."
 # Removed --project-dir as working_dir is already set correctly
