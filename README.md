@@ -9,7 +9,7 @@ The project utilizes three sample datasets in CSV format. The schema for these t
 |               | `country_code` (string) | Alpha-3 country code of group e.g., NOR=Norway; GBR=United Kingdom; etc. |
 |               | `created_at` (UTC timestamp) | System generated creation timestamp                                       |
 | `members`     | `membership_id`     | Unique ID                                                                   |
-|               | `group_id`          | Foreign Key                                                                 |
+|               | `team_id`          | Foreign Key                                                                 |
 |               | `role_title` (string) | member or admin                                                             |
 |               | `joined_at` (UTC timestamp) | System generated creation timestamp                                       |
 | `events`      | `event_id`          | Unique ID                                                                   |
@@ -27,7 +27,7 @@ The project utilizes three sample datasets in CSV format. The schema for these t
 
 The aim of this section is to ingest the provided CSV data into a local PostgreSQL database. Key considerations for ingestion include:
 * **Timestamp Transformation:** All timestamps are converted to the number of seconds from 01/01/1970.
-* **Foreign Key Handling:** The `group_id` in the `members` table correctly references the `team_id` in the `teams` table, and similar relationships are maintained for `events` and `event_rsvps`.
+* **Foreign Key Handling:** The `team_id` in the `members` table correctly references the `team_id` in the `teams` table, and similar relationships are maintained for `events` and `event_rsvps`.
 * **Database Setup:** PostgreSQL is set up using Terraform, ensuring a consistent and reproducible database schema.
 * **Containerization:** The entire ingestion process runs within a Docker container built on `python:3.12-slim-bookworm` for portability and isolation.
 

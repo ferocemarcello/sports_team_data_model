@@ -57,7 +57,7 @@ def setup_database(conn):
             except psycopg2.Error as e:
                 # Catch specific error for "relation already exists" from IF NOT EXISTS
                 if 'already exists' in str(e) and 'CREATE TABLE IF NOT EXISTS' in statement:
-                    print(f"Table already exists, skipping: {statement.strip().splitlines()[0]}...")
+                    # print(f"Table already exists, skipping: {statement.strip().splitlines()[0]}...")
                     conn.rollback() # Rollback the current transaction if an error occurs
                 else:
                     print(f"Error executing schema statement: {statement.strip()}")
@@ -104,8 +104,8 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
                 ingested_rows += 1
 
             except Exception as e:
-                print(f"Error ingesting row {i+1} from {csv_file_path} into {table_name}: {e}")
-                print(f"Problematic row: {row}")
+                # print(f"Error ingesting row {i+1} from {csv_file_path} into {table_name}: {e}")
+                # print(f"Problematic row: {row}")
                 skipped_rows += 1
                 conn.rollback() # Rollback the current transaction for this row to continue with next
                 continue # Continue to the next row
@@ -135,7 +135,7 @@ def main():
         }
         memberships_cols = { # Table renamed to memberships
             'membership_id': ('membership_id', 'str'),
-            'group_id': ('team_id', 'str'), # CSV 'group_id' maps to DB 'team_id'
+            'team_id': ('team_id', 'str'), # NOW DIRECTLY REFERENCES 'team_id' FROM CSV
             'role_title': ('role_title', 'str'),
             'joined_at': ('joined_at', 'timestamp')
         }
