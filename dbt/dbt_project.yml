@@ -19,13 +19,5 @@ clean-targets:         # directories to clean when `dbt clean` is run
 
 models:
   spond_analytics:
-    # Default for all models in your project - usually 'view' or nothing set here
-    # +materialized: view # You might see this commented out or not present
-
     staging:
-      # This explicitly sets materialization for all models in the 'staging' folder
-      +materialized: table # <--- CHANGE THIS LINE TO 'table'
-    
-    marts:
-      # This explicitly sets materialization for all models in the 'marts' folder
-      +materialized: table # This should already be 'table' or can be set to 'table'
+      +materialized: table
