@@ -1,8 +1,9 @@
 FROM python:3.9-slim-buster
 
-WORKDIR /app
+WORKDIR /usr/app/dbt
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dbt and its PostgreSQL adapter
+RUN pip install --no-cache-dir dbt-postgres
 
-COPY ingest_data.py .
+# No other COPY commands are needed here for project files.
+# dbt project files and profiles.yml are mounted via docker-compose.yml volumes.
