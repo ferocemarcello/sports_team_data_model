@@ -58,7 +58,9 @@ def setup_database(conn):
                 else:
                     print(f"Error executing schema statement: {statement.strip()}")
                     raise e
+    print("Attempting to commit database schema.") # New print
     conn.commit()
+    print("Database schema committed.") # New print
     cursor.close()
     print("Database schema initialized (or verified if tables existed).")
 
@@ -67,11 +69,10 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
     """Generic function to ingest data from a CSV into a specified table."""
     cursor = conn.cursor()
     ingested_rows = 0
-    skipped_fk_violations = 0  # Counter for foreign key violations
-    skipped_other_db_errors = 0 # Counter for other database errors
-    skipped_general_errors = 0 # Counter for general Python errors
+    skipped_fk_violations = 0
+    skipped_other_db_errors = 0
+    skipped_general_errors = 0
 
-    # Determine the primary key column name for logging, assuming first column in mapping is PK
     pk_col_name_csv = next(iter(columns_mapping))
     pk_col_name_db = columns_mapping[pk_col_name_csv][0]
 
@@ -104,12 +105,10 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
                 ingested_rows += 1
 
             except psycopg2.errors.ForeignKeyViolation as e:
-                # Suppress detailed print for ForeignKeyViolation (23503)
                 skipped_fk_violations += 1
                 conn.rollback()
                 continue
             except psycopg2.Error as e:
-                # For any other psycopg2 error (like NotNullViolation 23502), print details
                 print(f"--- Error ingesting row {i+1} into {table_name} from {csv_file_path} ---")
                 print(f"  Row PK ({pk_col_name_db}): {row.get(pk_col_name_csv)}")
                 print(f"  PostgreSQL Error Code: {e.pgcode}")
@@ -120,7 +119,6 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
                 conn.rollback()
                 continue
             except Exception as e:
-                # Catch any other general exceptions (e.g., ValueError during type conversion)
                 print(f"--- Unexpected Error ingesting row {i+1} into {table_name} from {csv_file_path} ---")
                 print(f"  Row PK ({pk_col_name_db}): {row.get(pk_col_name_csv)}")
                 print(f"  Error Type: {type(e).__name__}")
@@ -131,7 +129,9 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
                 conn.rollback()
                 continue
 
+    print(f"Attempting to commit data for {table_name}.") # New print
     conn.commit()
+    print(f"Data for {table_name} committed to database.") # New print
     cursor.close()
     print(f"Successfully ingested {ingested_rows} rows into {table_name} from {csv_file_path}.")
     if skipped_fk_violations > 0:
