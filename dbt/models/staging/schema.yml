@@ -84,7 +84,7 @@ models:
           - relationships:
               to: ref('stg_events')
               field: event_id
-      - name: member_id
+      - name: membership_id
         description: Identifier for the member.
         tests:
           - not_null
