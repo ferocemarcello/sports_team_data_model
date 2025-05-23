@@ -17,25 +17,25 @@ seeds:
         tests:
           - not_null
           - unique
-      - name: country-code
+      - name: country_code
         description: "The numeric country code."
         tests:
           - not_null
           - unique
-      - name: iso_3166-2
+      - name: iso
         description: "ISO 3166-2 subdivision code (e.g., US-CA)."
         tests:
           - not_null
           - unique
       - name: region
         description: "Geographic region."
-      - name: sub-region
+      - name: sub_region
         description: "Geographic sub-region."
-      - name: intermediate-region
+      - name: intermediate_region
         description: "Geographic intermediate-region."
-      - name: region-code
+      - name: region_code
         description: "Numeric region code."
-      - name: sub-region-code
+      - name: sub-region_code
         description: "Numeric sub-region code."
-      - name: intermediate-region-code
+      - name: intermediate_region-code
         description: "Numeric intermediate-region code."
