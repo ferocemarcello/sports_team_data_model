@@ -1,8 +1,8 @@
 SELECT
-    memberships.id AS membership_id,
-    memberships.team_id,
+    memberships.membership_id AS membership_id, -- CORRECTED: changed to memberships.membership_id
+    memberships.team_id, -- This was already correct in previous instructions
     memberships.role_title,
     memberships.joined_at
 FROM {{ source('public', 'raw_memberships') }} AS memberships
-INNER JOIN {{ source('public', 'raw_teams') }} AS teams -- Ensures team_id exists in raw_teams
-  ON memberships.team_id = teams.team_id -- CORRECTED: changed to teams.team_id
+INNER JOIN {{ source('public', 'raw_teams') }} AS teams
+  ON memberships.team_id = teams.team_id
