@@ -1,0 +1,17 @@
+# dbt/models/sources.yml
+version: 2
+
+sources:
+  - name: public # This is the 'public' in {{ source('public', '...') }}
+    database: "{{ env_var('DBT_POSTGRES_DBNAME') }}" # This should resolve to 'spond_analytics'
+    schema: public # This tells dbt to look in the 'public' schema for these tables
+
+    tables:
+      - name: raw_teams          # This is the 'raw_teams' in {{ source('public', 'raw_teams') }}
+        identifier: teams        # This is the actual table name in your 'public' schema
+      - name: raw_memberships
+        identifier: memberships
+      - name: raw_events
+        identifier: events
+      - name: raw_event_rsvps
+        identifier: event_rsvps
