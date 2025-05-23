@@ -2,36 +2,40 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:13
-    container_name: spond_postgres_db
+    image: postgres:16-alpine # Using a lightweight PostgreSQL image
+    container_name: spond-postgres
     ports:
-      - "5432:5432"
+      - "5432:5432" # Map host port 5432 to container port 5432
     environment:
-      POSTGRES_DB: spond_db
-      POSTGRES_USER: spond_user
-      POSTGRES_PASSWORD: spond_password
+      POSTGRES_DB: ${DB_NAME:-spond_analytics}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
+      - postgres_data:/var/lib/postgresql/data # Persistent volume for database data
+    healthcheck: # Healthcheck to ensure DB is ready before ingester starts
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 5
-      start_period: 10s
+    restart: always # Ensure the database restarts if it crashes
 
-  ingestion_app:
-    build: .
-    container_name: spond_ingestion_app
+  ingester:
+    build: . # Build the image from the Dockerfile in the current directory
+    container_name: spond-data-ingester
+    volumes:
+      - ./data:/app/data # Mount the local 'data' directory into the container
     environment:
-      PG_HOST: db
-      PG_PORT: 5432
-      PG_DB: spond_db
-      PG_USER: spond_user
-      PG_PASSWORD: spond_password
+      DB_HOST: db # Use the service name 'db' as the hostname for PostgreSQL
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-spond_analytics}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
     depends_on:
       db:
-        condition: service_healthy
-    restart: "no" 
+        condition: service_healthy # Ensure 'db' service is healthy before starting 'ingester'
+    command: python ingest_data.py # Command to run your main script inside the container
+    restart: "no" # The ingester container should exit after it completes its task
 
+# Define the named volume for PostgreSQL data persistence
 volumes:
   postgres_data:
