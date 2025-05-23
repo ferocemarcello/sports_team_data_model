@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: teams
+    description: Final teams dimension table.
+    columns:
+      - name: team_id
+        description: Primary key for teams.
+        tests:
+          - unique
+          - not_null
+      - name: team_name
+        description: The name of the team.
+      - name: team_created_at
+        description: The timestamp when the team was created.
+
+  - name: events_with_rsvps
+    description: Aggregated fact table showing events with RSVP counts.
+    columns:
+      - name: event_id
+        description: Primary key for events.
+        tests:
+          - unique
+          - not_null
+      - name: event_name
+        description: The name of the event.
+      - name: event_time
+        description: The timestamp of the event.
+      - name: total_rsvps
+        description: Total number of RSVPs for the event.
+      - name: accepted_rsvps
+        description: Number of accepted RSVPs for the event.
+      - name: declined_rsvps
+        description: Number of declined RSVPs for the event.
+      - name: pending_rsvps
+        description: Number of pending RSVPs for the event.

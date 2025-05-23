@@ -1,0 +1,14 @@
+spond_analytics_profile:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_POSTGRES_HOST') }}"
+      port: "{{ env_var('DBT_POSTGRES_PORT') | int }}"
+      user: "{{ env_var('DBT_POSTGRES_USER') }}"
+      password: "{{ env_var('DBT_POSTGRES_PASSWORD') }}"
+      dbname: "{{ env_var('DBT_POSTGRES_DBNAME') }}"
+      schema: "{{ env_var('DBT_POSTGRES_SCHEMA') }}"
+      threads: 1
+      keepalives_idle: 0 # Disable keepalives to prevent issues in some environments
+      # You can add sslmode: 'disable' here if you ever need dbt to connect without SSL and run dbt manually without docker-compose

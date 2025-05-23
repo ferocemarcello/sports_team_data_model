@@ -12,7 +12,7 @@ provider "postgresql" {
   port            = 5432
   username        = "postgres"
   password        = "postgres"
-  database        = "postgres" # <--- CHANGE THIS LINE from "spond_analytics" to "postgres"
+  database        = "postgres" # Important: connect to 'postgres' to create 'spond_analytics'
   sslmode         = "disable"
 }
 

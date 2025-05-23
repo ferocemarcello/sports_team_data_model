@@ -1,0 +1,86 @@
+version: 2
+
+models:
+  - name: stg_teams
+    description: Staging model for raw teams data.
+    columns:
+      - name: team_id
+        description: Unique identifier for the team.
+        tests:
+          - unique
+          - not_null
+      - name: team_name
+        description: Name of the team.
+      - name: team_created_at
+        description: Timestamp when the team was created.
+
+  - name: stg_memberships
+    description: Staging model for raw memberships data.
+    columns:
+      - name: membership_id
+        description: Unique identifier for the membership.
+        tests:
+          - unique
+          - not_null
+      - name: team_id
+        description: Foreign key to teams.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_teams')
+              field: team_id
+      - name: member_id
+        description: Identifier for the member.
+        tests:
+          - not_null
+      - name: is_admin
+        description: Boolean indicating if the member is an admin.
+
+  - name: stg_events
+    description: Staging model for raw events data.
+    columns:
+      - name: event_id
+        description: Unique identifier for the event.
+        tests:
+          - unique
+          - not_null
+      - name: team_id
+        description: Foreign key to teams.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_teams')
+              field: team_id
+      - name: event_name
+        description: Name of the event.
+      - name: event_time
+        description: Timestamp of the event.
+      - name: location
+        description: Location of the event.
+
+  - name: stg_event_rsvps
+    description: Staging model for raw event RSVPs data.
+    columns:
+      - name: rsvp_id
+        description: Unique identifier for the RSVP.
+        tests:
+          - unique
+          - not_null
+      - name: event_id
+        description: Foreign key to events.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_events')
+              field: event_id
+      - name: member_id
+        description: Identifier for the member.
+        tests:
+          - not_null
+      - name: status
+        description: RSVP status (e.g., accepted, declined, pending).
+        tests:
+          - accepted_values:
+              values: ['accepted', 'declined', 'pending']
+      - name: rsvp_time
+        description: Timestamp when the RSVP was made.

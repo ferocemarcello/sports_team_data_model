@@ -1,0 +1,29 @@
+name: 'spond_analytics'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'spond_analytics_profile'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"  # directory to store compiled SQL files
+clean-targets:         # directories to clean when `dbt clean` is run
+  - "target"
+  - "dbt_packages"
+
+# Configures models
+models:
+  spond_analytics:
+    # Set the default schema for all models in this project
+    +schema: public
+    staging:
+      +materialized: view # Staging models as views for simplicity
+    marts:
+      +materialized: table # Marts models as tables
+      +pre-hook: "GRANT SELECT ON {{ this }} TO PUBLIC;" # Example: Grant public read access
