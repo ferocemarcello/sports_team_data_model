@@ -1,10 +1,27 @@
+WITH event_rsvps_agg AS (
+    SELECT
+        event_id,
+        COUNT(rsvp_id) AS total_rsvps,
+        COUNT(CASE WHEN status = 'accepted' THEN rsvp_id END) AS accepted_rsvps,
+        COUNT(CASE WHEN status = 'declined' THEN rsvp_id END) AS declined_rsvps,
+        COUNT(CASE WHEN status = 'pending' THEN rsvp_id END) AS pending_rsvps
+    FROM
+        {{ ref('stg_event_rsvps') }}
+    GROUP BY
+        event_id
+)
+
 SELECT
-    rsvps.event_rsvp_id AS rsvp_id,
-    rsvps.event_id,
-    rsvps.membership_id, -- Corrected: from member_id to membership_id
-    rsvps.rsvp_status AS status,
-    rsvps.responded_at AS rsvp_time -- Corrected: from rsvp_time to responded_at
-FROM {{ source('public', 'raw_event_rsvps') }} AS rsvps
-INNER JOIN {{ source('public', 'raw_events') }} AS events
-  ON rsvps.event_id = events.event_id
-WHERE rsvps.rsvp_status IN ('accepted', 'declined', 'pending')
+    e.event_id,
+    e.event_time,  -- CORRECTED: Changed from e.event_start to e.event_time
+    e.event_end,
+    e.latitude,
+    e.longitude,
+    COALESCE(era.total_rsvps, 0) AS total_rsvps,
+    COALESCE(era.accepted_rsvps, 0) AS accepted_rsvps,
+    COALESCE(era.declined_rsvps, 0) AS declined_rsvps,
+    COALESCE(era.pending_rsvps, 0) AS pending_rsvps
+FROM
+    {{ ref('stg_events') }} AS e
+LEFT JOIN
+    event_rsvps_agg AS era ON e.event_id = era.event_id
