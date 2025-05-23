@@ -3,7 +3,34 @@ import psycopg2
 import os
 from io import StringIO
 
-# ... (create_raw_table_if_not_exists function remains the same) ...
+def create_raw_table_if_not_exists(table_name, df_columns, cur):
+    """
+    Creates a raw table if it does not exist, inferring types from DataFrame columns.
+    Uses TEXT for most columns for flexibility in raw ingestion.
+    """
+    column_defs = []
+    for col in df_columns:
+        if 'id' in col or 'code' in col or 'title' in col or 'name' in col or 'status' in col:
+            pg_type = 'VARCHAR(255)'
+        elif 'time' in col or 'date' in col:
+            pg_type = 'TIMESTAMP'
+        elif 'latitude' in col or 'longitude' in col:
+            pg_type = 'NUMERIC'
+        elif 'is_admin' in col:
+            pg_type = 'BOOLEAN'
+        else:
+            pg_type = 'TEXT'
+
+        column_defs.append(f'"{col}" {pg_type}')
+
+    create_table_sql = f"""
+    CREATE TABLE IF NOT EXISTS public.{table_name} (
+        {', '.join(column_defs)}
+    );
+    """
+    cur.execute(create_table_sql)
+    print(f"Ensured table public.{table_name} exists.")
+
 
 def ingest_csv_to_postgres(filepath, table_name, conn):
     """
@@ -57,5 +84,40 @@ def ingest_csv_to_postgres(filepath, table_name, conn):
     except Exception as e:
         print(f"Error ingesting {filepath} to public.{table_name}: {e}")
         raise
+    
+if __name__ == "__main__":
+    db_host = os.getenv('DB_HOST', 'db')
+    db_port = os.getenv('DB_PORT', '5432')
+    db_name = os.getenv('DB_NAME', 'spond_analytics')
+    db_user = os.getenv('DB_USER', 'postgres')
+    db_password = os.getenv('DB_PASSWORD', 'postgres')
 
-# ... (main function remains the same) ...
+    csv_files = {
+        'teams': 'teams.csv',
+        'memberships': 'memberships.csv',
+        'events': 'events.csv',
+        'event_rsvps': 'event_rsvps.csv',
+    }
+
+    conn = None
+    try:
+        conn = psycopg2.connect(
+            host=db_host,
+            port=db_port,
+            database=db_name,
+            user=db_user,
+            password=db_password
+        )
+        print("Connected to PostgreSQL successfully!")
+
+        for table_name_key, filename in csv_files.items():
+            filepath = f"/app/{filename}"
+            ingest_csv_to_postgres(filepath, table_name_key, conn)
+
+    except Exception as e:
+        print(f"Database connection or ingestion failed: {e}")
+        exit(1)
+    finally:
+        if conn:
+            conn.close()
+            print("PostgreSQL connection closed.")
