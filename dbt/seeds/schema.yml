@@ -4,8 +4,14 @@ seeds:
     columns:
       - name: name
         description: "The full country name."
+        tests:
+          - not_null
+          - unique
       - name: alpha_two
         description: "The 2-letter Alpha-2 country code."
+        tests:
+          - not_null
+          - unique
       - name: alpha_three
         description: "The 3-letter Alpha-3 country code. Used for filtering teams."
         tests:
@@ -13,8 +19,14 @@ seeds:
           - unique
       - name: country-code
         description: "The numeric country code."
+        tests:
+          - not_null
+          - unique
       - name: iso_3166-2
         description: "ISO 3166-2 subdivision code (e.g., US-CA)."
+        tests:
+          - not_null
+          - unique
       - name: region
         description: "Geographic region."
       - name: sub-region
