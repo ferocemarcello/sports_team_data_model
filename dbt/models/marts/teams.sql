@@ -1,6 +1,6 @@
 {{ config(
-    materialized='table',  -- Materialize as a table (instead of default view)
-    schema='public'        -- Explicitly set the schema for this model
+    materialized='table',
+    schema='public'
 )}}
 
 SELECT
