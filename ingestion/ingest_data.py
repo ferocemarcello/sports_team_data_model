@@ -51,10 +51,20 @@ def ingest_csv_to_postgres(filepath, table_name, conn):
             cur.execute(f"TRUNCATE TABLE public.{table_name} RESTART IDENTITY;")
             print(f"Truncated table public.{table_name}.")
 
-            # --- CRITICAL CHANGE: COMMIT DDL OPERATIONS IMMEDIATELY ---
-            # This ensures CREATE TABLE and TRUNCATE are visible before COPY
+            # Commit DDL operations immediately
             conn.commit()
             print(f"Committed table creation and truncation for public.{table_name}.")
+
+            # --- NEW DEBUGGING STEP: Verify table existence immediately before COPY ---
+            try:
+                # Attempt a simple query to confirm table visibility/existence
+                cur.execute(f"SELECT 1 FROM public.{table_name} LIMIT 1;")
+                print(f"Verification: Table public.{table_name} is accessible before COPY.")
+            except psycopg2.Error as e:
+                print(f"Verification FAILED: Table public.{table_name} is NOT accessible before COPY. Error: {e}")
+                # If even a simple SELECT fails, something is fundamentally wrong.
+                raise # Re-raise to stop the process and indicate the core issue.
+            # --- END NEW DEBUGGING STEP ---
 
 
             # Use the copy_from method for efficient ingestion
@@ -70,9 +80,6 @@ def ingest_csv_to_postgres(filepath, table_name, conn):
 
     except Exception as e:
         print(f"Error ingesting {filepath} to public.{table_name}: {e}")
-        # --- CRITICAL CHANGE: Re-raise the exception ---
-        # This will cause the Python script to exit with a non-zero code,
-        # which run_ingestion.sh will then catch.
         raise
 
 if __name__ == "__main__":
@@ -106,7 +113,7 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"Database connection or ingestion failed: {e}")
-        exit(1) # Exit with an error code
+        exit(1)
     finally:
         if conn:
             conn.close()
