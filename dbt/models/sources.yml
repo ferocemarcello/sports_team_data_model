@@ -2,16 +2,15 @@
 version: 2
 
 sources:
-  - name: public # This is the 'public' in {{ source('public', '...') }}
+  - name: public
     database: "{{ env_var('DBT_POSTGRES_DBNAME') }}"
-    schema: public # This tells dbt to look in the 'public' schema for these tables
-
+    schema: public
     tables:
-      - name: raw_teams          # This is the 'raw_teams' in {{ source('public', 'raw_teams') }}
-        identifier: teams        # This is the actual table name in your 'public' schema
+      - name: raw_teams
+        identifier: teams
       - name: raw_memberships
         identifier: memberships
       - name: raw_events
         identifier: events
-      - name: raw_event_rsvps
-        identifier: event_rsvps
+      - name: raw_event_rsvps # <--- What is the 'name' here?
+        identifier: event_rsvps # <--- What is the 'identifier' here?
