@@ -27,7 +27,7 @@ models:
         description: RSVP status (0, 1, 2).
         tests:
           - accepted_values:
-              values: [0, 1, 2]
+              values: ['0', '1', '2']
       - name: rsvp_time # This is the renamed column from responded_at
         description: Timestamp of when the RSVP was responded.
         # You might want to add a not_null test here if it's always expected
