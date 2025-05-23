@@ -101,17 +101,19 @@ done
 
 echo "--- psql verification complete. Proceeding with dbt build ---"
 
+# --- START: MODIFIED SECTION FOR DBT CLEAN ---
 echo "Cleaning dbt artifacts..."
-docker-compose run --rm dbt-cli dbt clean --project-dir /usr/app/dbt_project
+# Removed --project-dir as working_dir is already set correctly
+docker-compose run --rm dbt-cli dbt clean
 if [ $? -ne 0 ]; then
   echo "dbt clean failed."
   exit 1
 fi
+# --- END: MODIFIED SECTION FOR DBT CLEAN ---
 
 # 6. Run dbt to build models and tests
 echo "Running dbt transformations and tests..."
-# 'docker-compose run --rm dbt-cli' executes a command in a new ephemeral dbt-cli container
-# The 'dbt build' command runs 'dbt run' and 'dbt test'
+# Removed --project-dir here too for consistency
 docker-compose run --rm dbt-cli dbt build --target dev
 if [ $? -ne 0 ]; then
   echo "dbt build failed."

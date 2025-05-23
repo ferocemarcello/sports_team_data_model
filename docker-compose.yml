@@ -62,8 +62,7 @@ services:
     working_dir: /usr/app/dbt
     # REMOVE THIS LINE:
     # entrypoint: dbt
-    command: python -m dbt build # <--- Ensure this is 'build' as per your shell script
-                                 # (or 'run' if you prefer just to run models)
+    command: python -m dbt build
 
 volumes:
   postgres_data:
