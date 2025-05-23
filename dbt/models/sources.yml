@@ -3,7 +3,7 @@ version: 2
 
 sources:
   - name: public # This is the 'public' in {{ source('public', '...') }}
-    database: "{{ env_var('DBT_POSTGRES_DBNAME') }}" # This should resolve to 'spond_analytics'
+    database: "{{ env_var('DBT_POSTGRES_DBNAME') }}"
     schema: public # This tells dbt to look in the 'public' schema for these tables
 
     tables:

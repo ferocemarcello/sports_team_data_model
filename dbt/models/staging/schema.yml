@@ -1,18 +1,5 @@
 version: 2
 
-sources:
-  - name: public # This should be the schema where your raw tables are located
-    database: spond_analytics # Your database name
-    tables:
-      - name: raw_teams
-        description: Raw data for teams.
-      - name: raw_memberships
-        description: Raw data for memberships.
-      - name: raw_events
-        description: Raw data for events.
-      - name: raw_event_rsvps
-        description: Raw data for event RSVPs.
-
 models:
   - name: stg_teams
     description: Staging model for raw teams data.
