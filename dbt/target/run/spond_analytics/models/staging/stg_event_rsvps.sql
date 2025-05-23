@@ -14,7 +14,7 @@ SELECT
     event_id,
     membership_id,
     rsvp_status,
-    rsvp_time
+    responded_at
 FROM "spond_analytics"."public"."event_rsvps"
 WHERE rsvp_status IN ('accepted', 'declined', 'pending')
   );
