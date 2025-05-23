@@ -8,7 +8,7 @@ echo "--- Setting up PostgreSQL with Docker Compose and Terraform ---"
 # 1. Stop and remove existing Docker Compose services and volumes for a clean start
 echo "Stopping and removing existing Docker Compose services and volumes (if any)..."
 # Forcefully remove any lingering container with the specific name
-docker rm -f spond-postgres 2>/dev/null || true # <--- ADD THIS LINE
+docker rm -f spond-postgres 2>/dev/null || true
 docker-compose down -v
 
 # 2. Start the PostgreSQL database service immediately
@@ -19,13 +19,25 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+# REPLACE THIS BLOCK (from "Waiting for PostgreSQL database to be healthy..." down to "PostgreSQL database is up and healthy.")
+# WITH THE FOLLOWING:
 echo "Waiting for PostgreSQL database to be healthy..."
-docker-compose wait db
-if [ $? -ne 0 ]; then
-  echo "PostgreSQL database did not become healthy."
-  exit 1
-fi
-echo "PostgreSQL database is up and healthy."
+MAX_RETRIES=10
+RETRY_INTERVAL=5 # seconds
+for i in $(seq 1 $MAX_RETRIES); do
+  # Use docker exec to run pg_isready inside the container
+  if docker exec spond-postgres pg_isready -U postgres -d spond_analytics; then
+    echo "PostgreSQL database is up and healthy."
+    break
+  else
+    echo "PostgreSQL is not ready yet. Retrying in $RETRY_INTERVAL seconds..."
+    sleep $RETRY_INTERVAL
+  fi
+  if [ $i -eq $MAX_RETRIES ]; then
+    echo "PostgreSQL database did not become healthy within the timeout."
+    exit 1
+  fi
+done
 
 # 3. Explicitly drop the database if it exists, to ensure a clean slate for Terraform
 # This helps if docker-compose down -v sometimes fails to remove the volume content or if a previous run left data.
