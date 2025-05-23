@@ -1,79 +1,65 @@
 #!/bin/bash
 
-set -e
+# Define directories
+TERRAFORM_DIR="./terraform"
 
-echo "--- Setting up PostgreSQL with Docker and Terraform ---"
+echo "--- Setting up PostgreSQL with Docker Compose and Terraform ---"
 
-# Stop and remove any existing PostgreSQL container
-echo "Stopping and removing existing PostgreSQL Docker container (if any)..."
-docker stop spond-postgres &> /dev/null || true
-docker rm spond-postgres &> /dev/null || true
+# 1. Stop and remove existing Docker Compose services and volumes for a clean start
+# This ensures a fresh database each time you run the script, which is good for testing.
+echo "Stopping and removing existing Docker Compose services and volumes (if any)..."
+docker-compose down -v
 
-# Clean up Terraform state files for a fresh start
-# This ensures Terraform re-creates all resources, including tables, from scratch
-echo "Cleaning up Terraform state files..."
-rm -f terraform/terraform.tfstate
-rm -f terraform/terraform.tfstate.backup
+# 2. Initialize Terraform and apply configuration to create ONLY the database
+# The 'null_resource.create_tables' will be removed from main.tf (see next step)
+# as ingest_data.py will handle creating tables.
+echo "Initializing Terraform..."
+# Remove old terraform state to ensure a fresh apply in development
+rm -f "$TERRAFORM_DIR"/terraform.tfstate*
+cd "$TERRAFORM_DIR" || { echo "Error: Missing terraform directory."; exit 1; }
+terraform init
+if [ $? -ne 0 ]; then
+  echo "Terraform initialization failed."
+  exit 1
+fi
+echo "Applying Terraform configuration to create database..."
+# Target only the database resource. This is more robust if you expand Terraform later.
+terraform apply -auto-approve -target=postgresql_database.spond_analytics
+if [ $? -ne 0 ]; then
+  echo "Terraform apply failed."
+  exit 1
+fi
+cd - > /dev/null # Go back to original directory
 
-# Start PostgreSQL Docker container
-echo "Starting PostgreSQL Docker container..."
-docker run --name spond-postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:16-alpine
+# 3. Start Docker Compose services (PostgreSQL and Data Ingestion)
+# The --build flag ensures the ingester image is rebuilt if Dockerfile or context changes.
+echo "Starting Docker Compose services (PostgreSQL and Data Ingestion)..."
+docker-compose up --build -d
 
-# Wait for PostgreSQL to be ready
-echo "Waiting for PostgreSQL to start..."
-PG_READY=0
-for i in $(seq 1 30); do
-  if docker exec spond-postgres pg_isready -h localhost -p 5432 -U postgres; then
-    PG_READY=1
-    break
-  fi
-  sleep 2
-done
-
-if [ "$PG_READY" -eq 1 ]; then
-  echo "PostgreSQL is up and running!"
-else
-  echo "PostgreSQL did not start in time. Exiting."
+# 4. Wait for the ingester container to complete its job
+echo "Waiting for data ingestion to complete..."
+# Get the container ID of the ingester service
+INGESTER_CONTAINER_ID=$(docker-compose ps -q ingester)
+if [ -z "$INGESTER_CONTAINER_ID" ]; then
+  echo "Ingester container not found or not running. Check docker-compose logs."
   exit 1
 fi
 
-# Initialize Terraform (if not already initialized)
-echo "Initializing Terraform..."
-cd terraform
-terraform init
+# Wait for the container to exit (0 for success, non-zero for error)
+docker wait "$INGESTER_CONTAINER_ID" > /dev/null
+INGESTER_EXIT_CODE=$?
 
-# Apply Terraform configuration to create database and tables
-# -auto-approve is used to automatically approve the plan, suitable for scripts
-echo "Applying Terraform configuration..."
-terraform apply -auto-approve
+if [ "$INGESTER_EXIT_CODE" -eq 0 ]; then
+  echo "Data ingestion process completed successfully."
+else
+  echo "Data ingestion process completed with errors (exit code: $INGESTER_EXIT_CODE)."
+fi
 
-# Go back to the root directory
-cd ..
+# 5. Show logs for verification
+echo "--- Ingestion Logs ---"
+docker-compose logs ingester
 
-echo "PostgreSQL database and tables created successfully."
-
-echo "--- Building and Running Data Ingestion Container ---"
-
-# Build Docker image for data ingestion
-echo "Building Docker image for data ingestion..."
-docker build -t spond-data-ingester .
-
-# Run data ingestion
-echo "Running data ingestion..."
-docker run --network host \
-           -e DB_HOST="localhost" \
-           -e DB_PORT="5432" \
-           -e DB_NAME="spond_analytics" \
-           -e DB_USER="postgres" \
-           -e DB_PASSWORD="postgres" \
-           -v "$(pwd)/data:/app/data" \
-           spond-data-ingester python ingest_data.py
-
-echo "Data ingestion complete."
-echo "Database connection closed."
-echo "Data ingestion process completed."
-
-echo "--- Verifying Data Ingestion (Optional) ---"
+echo "--- Verification ---"
 echo "You can connect to the database to verify data:"
 echo "psql -h localhost -p 5432 -U postgres -d spond_analytics"
 echo "Then run queries like: SELECT COUNT(*) FROM teams;"
