@@ -1,4 +1,3 @@
--- dbt/models/staging/stg_teams.sql
 SELECT
     team_id,
     team_activity,
