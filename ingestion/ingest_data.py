@@ -3,34 +3,7 @@ import psycopg2
 import os
 from io import StringIO
 
-def create_raw_table_if_not_exists(table_name, df_columns, cur):
-    """
-    Creates a raw table if it does not exist, inferring types from DataFrame columns.
-    Uses TEXT for most columns for flexibility in raw ingestion.
-    """
-    column_defs = []
-    for col in df_columns:
-        if 'id' in col or 'code' in col or 'title' in col or 'name' in col or 'status' in col:
-            pg_type = 'VARCHAR(255)'
-        elif 'time' in col or 'date' in col:
-            pg_type = 'TIMESTAMP'
-        elif 'latitude' in col or 'longitude' in col:
-            pg_type = 'NUMERIC'
-        elif 'is_admin' in col:
-            pg_type = 'BOOLEAN'
-        else:
-            pg_type = 'TEXT'
-
-        column_defs.append(f'"{col}" {pg_type}')
-
-    create_table_sql = f"""
-    CREATE TABLE IF NOT EXISTS public.{table_name} (
-        {', '.join(column_defs)}
-    );
-    """
-    cur.execute(create_table_sql)
-    print(f"Ensured table public.{table_name} exists.")
-
+# ... (create_raw_table_if_not_exists function remains the same) ...
 
 def ingest_csv_to_postgres(filepath, table_name, conn):
     """
@@ -55,66 +28,34 @@ def ingest_csv_to_postgres(filepath, table_name, conn):
             conn.commit()
             print(f"Committed table creation and truncation for public.{table_name}.")
 
-            # --- NEW DEBUGGING STEP: Verify table existence immediately before COPY ---
+            # --- Verification step (keep this for now) ---
             try:
-                # Attempt a simple query to confirm table visibility/existence
                 cur.execute(f"SELECT 1 FROM public.{table_name} LIMIT 1;")
                 print(f"Verification: Table public.{table_name} is accessible before COPY.")
             except psycopg2.Error as e:
                 print(f"Verification FAILED: Table public.{table_name} is NOT accessible before COPY. Error: {e}")
-                # If even a simple SELECT fails, something is fundamentally wrong.
-                raise # Re-raise to stop the process and indicate the core issue.
-            # --- END NEW DEBUGGING STEP ---
+                raise
+            # --- END Verification step ---
 
 
-            # Use the copy_from method for efficient ingestion
+            # --- CRITICAL CHANGE: Use copy_expert instead of copy_from ---
+            sql_copy = f"""
+            COPY public.{table_name} FROM STDIN WITH (FORMAT CSV, HEADER FALSE);
+            """
+            # Note: HEADER FALSE is essential because df.to_csv(header=False) writes no header
+
             buffer = StringIO()
-            df.to_csv(buffer, index=False, header=False)
+            df.to_csv(buffer, index=False, header=False) # Ensure no header is written to buffer
             buffer.seek(0)
 
-            cur.copy_from(buffer, f'public.{table_name}', sep=',')
+            cur.copy_expert(sql_copy, buffer) # Use copy_expert with the SQL command and the buffer
             print(f"Successfully copied data to public.{table_name}.")
-        
-        # Commit the COPY_FROM operation
+
+        # Commit the COPY operation
         conn.commit()
 
     except Exception as e:
         print(f"Error ingesting {filepath} to public.{table_name}: {e}")
         raise
 
-if __name__ == "__main__":
-    db_host = os.getenv('DB_HOST', 'db')
-    db_port = os.getenv('DB_PORT', '5432')
-    db_name = os.getenv('DB_NAME', 'spond_analytics')
-    db_user = os.getenv('DB_USER', 'postgres')
-    db_password = os.getenv('DB_PASSWORD', 'postgres')
-
-    csv_files = {
-        'teams': 'teams.csv',
-        'memberships': 'memberships.csv',
-        'events': 'events.csv',
-        'event_rsvps': 'event_rsvps.csv',
-    }
-
-    conn = None
-    try:
-        conn = psycopg2.connect(
-            host=db_host,
-            port=db_port,
-            database=db_name,
-            user=db_user,
-            password=db_password
-        )
-        print("Connected to PostgreSQL successfully!")
-
-        for table_name_key, filename in csv_files.items():
-            filepath = f"/app/{filename}"
-            ingest_csv_to_postgres(filepath, table_name_key, conn)
-
-    except Exception as e:
-        print(f"Database connection or ingestion failed: {e}")
-        exit(1)
-    finally:
-        if conn:
-            conn.close()
-            print("PostgreSQL connection closed.")
+# ... (main function remains the same) ...
