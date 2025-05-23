@@ -402,7 +402,7 @@ FodyWeavers.xsd
 
 # dbt artifacts and local files
 dbt/target/
-.user.yml
+dbt/.user.yml
 dbt_modules/
 logs/
 
