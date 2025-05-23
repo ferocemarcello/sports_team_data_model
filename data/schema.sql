@@ -8,9 +8,9 @@ CREATE TABLE IF NOT EXISTS teams (
     created_at BIGINT NOT NULL
 );
 
--- Create members table
+-- Create memberships table (formerly members)
 -- Note: group_id renamed to team_id and references teams(team_id); joined_at uses BIGINT for Unix epoch seconds
-CREATE TABLE IF NOT EXISTS members (
+CREATE TABLE IF NOT EXISTS memberships (
     membership_id VARCHAR(255) PRIMARY KEY,
     team_id VARCHAR(255) NOT NULL,
     role_title VARCHAR(255) NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 -- Create event_rsvps table
--- Note: responded_at uses BIGINT for Unix epoch seconds
+-- Note: member_id now references memberships(membership_id); responded_at uses BIGINT for Unix epoch seconds
 CREATE TABLE IF NOT EXISTS event_rsvps (
     event_rsvp_id VARCHAR(255) PRIMARY KEY,
     event_id VARCHAR(255) NOT NULL,
@@ -40,5 +40,5 @@ CREATE TABLE IF NOT EXISTS event_rsvps (
     rsvp_status INTEGER NOT NULL,
     responded_at BIGINT, -- Can be NULL for unanswered
     FOREIGN KEY (event_id) REFERENCES events(event_id),
-    FOREIGN KEY (member_id) REFERENCES members(membership_id)
+    FOREIGN KEY (member_id) REFERENCES memberships(membership_id)
 );
