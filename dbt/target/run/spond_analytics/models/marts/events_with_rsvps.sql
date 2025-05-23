@@ -12,10 +12,10 @@
 WITH event_rsvps_agg AS (
     SELECT
         event_id,
-        COUNT(rsvp_id) AS total_rsvps,
-        COUNT(CASE WHEN status = 'accepted' THEN rsvp_id END) AS accepted_rsvps,
-        COUNT(CASE WHEN status = 'declined' THEN rsvp_id END) AS declined_rsvps,
-        COUNT(CASE WHEN status = 'pending' THEN rsvp_id END) AS pending_rsvps
+        COUNT(event_rsvp_id) AS total_rsvps,
+        COUNT(CASE WHEN status = 'accepted' THEN event_rsvp_id END) AS accepted_rsvps,
+        COUNT(CASE WHEN status = 'declined' THEN event_rsvp_id END) AS declined_rsvps,
+        COUNT(CASE WHEN status = 'pending' THEN event_rsvp_id END) AS pending_rsvps
     FROM
         "spond_analytics"."public"."stg_event_rsvps"
     GROUP BY
