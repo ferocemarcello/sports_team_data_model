@@ -10,4 +10,4 @@ SELECT
     created_at
     -- location -- This column is not directly in events.csv, might be derived from lat/long
 FROM
-    "spond_analytics"."public"."raw_events"
+    "spond_analytics"."public"."events"

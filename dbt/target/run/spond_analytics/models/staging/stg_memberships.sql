@@ -13,8 +13,8 @@
     memberships.team_id, -- This was already correct in previous instructions
     memberships.role_title,
     memberships.joined_at
-FROM "spond_analytics"."public"."raw_memberships" AS memberships
-INNER JOIN "spond_analytics"."public"."raw_teams" AS teams
+FROM "spond_analytics"."public"."memberships" AS memberships
+INNER JOIN "spond_analytics"."public"."teams" AS teams
   ON memberships.team_id = teams.team_id
   );
   

@@ -65,13 +65,19 @@ if [ $? -ne 0 ]; then
 fi
 cd - > /dev/null
 
-# 5. Run the Ingestion service (one-off) to load raw data
-echo "Starting Data Ingestion service..."
-# --force-recreate ensures a fresh run every time
-docker-compose up --build --force-recreate --no-deps ingester
-if [ $? -ne 0 ]; then
-  echo "Data ingestion service failed to start or run."
-  exit 1
+# 5. Run the Ingestion service (one-off) to load raw data and stream its output
+echo "--- Starting Data Ingestion service and capturing its output ---"
+# 'docker-compose up' with --abort-on-container-exit will stream logs and exit when the service exits
+# We also redirect stderr to stdout (2>&1) to ensure all Python print/error messages are visible.
+docker-compose up --build --force-recreate --no-deps --abort-on-container-exit ingester 2>&1
+INGESTER_EXIT_CODE=$? # Capture the exit code of the ingester service
+
+if [ "$INGESTER_EXIT_CODE" -eq 0 ]; then
+  echo "--- Data ingestion process completed successfully (exit code: 0) ---"
+else
+  echo "--- Data ingestion process completed with errors (exit code: $INGESTER_EXIT_CODE) ---"
+  echo "!!! Stopping script due to ingestion failure. !!!"
+  exit 1 # Crucially, exit here if ingestion failed so dbt doesn't run on empty tables
 fi
 
 echo "Waiting for data ingestion to complete..."

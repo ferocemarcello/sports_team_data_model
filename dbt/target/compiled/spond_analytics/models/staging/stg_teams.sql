@@ -5,4 +5,4 @@ SELECT
     country_code,
     created_at AS team_created_at     -- Renaming created_at to team_created_at
 FROM
-    "spond_analytics"."public"."raw_teams"
+    "spond_analytics"."public"."teams"
