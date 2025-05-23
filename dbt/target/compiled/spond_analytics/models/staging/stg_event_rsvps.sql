@@ -6,4 +6,3 @@ SELECT
     rsvp_status,
     responded_at
 FROM "spond_analytics"."public"."event_rsvps"
-WHERE rsvp_status IN ('accepted', 'declined', 'pending')

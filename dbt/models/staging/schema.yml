@@ -24,10 +24,10 @@ models:
               to: ref('stg_memberships')
               field: membership_id # Assuming you have a membership_id in stg_memberships
       - name: rsvp_status
-        description: RSVP status (accepted, declined, pending).
+        description: RSVP status (0, 1, 2).
         tests:
           - accepted_values:
-              values: ['accepted', 'declined', 'pending']
+              values: [0, 1, 2]
       - name: rsvp_time # This is the renamed column from responded_at
         description: Timestamp of when the RSVP was responded.
         # You might want to add a not_null test here if it's always expected
