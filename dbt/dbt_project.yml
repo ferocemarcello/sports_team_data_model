@@ -17,14 +17,15 @@ clean-targets:         # directories to clean when `dbt clean` is run
   - "target"
   - "dbt_packages"
 
-# Configures models
 models:
   spond_analytics:
-    # Set the default schema for all models in this project
-    +schema: public
+    # Default for all models in your project - usually 'view' or nothing set here
+    # +materialized: view # You might see this commented out or not present
+
     staging:
-      +materialized: view # Staging models as views for simplicity
+      # This explicitly sets materialization for all models in the 'staging' folder
+      +materialized: table # <--- CHANGE THIS LINE TO 'table'
+    
     marts:
-      +materialized: table # Marts models as tables
-      # Temporarily comment out or remove this line:
-      # +pre-hook: "GRANT SELECT ON {{ this }} TO PUBLIC;" # Example: Grant public read access
+      # This explicitly sets materialization for all models in the 'marts' folder
+      +materialized: table # This should already be 'table' or can be set to 'table'
