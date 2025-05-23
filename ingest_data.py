@@ -145,9 +145,9 @@ def main():
             'country_code': ('country_code', 'str'),
             'created_at': ('created_at', 'timestamp')
         }
-        memberships_cols = {
+        memberships_cols = { # Table renamed to memberships
             'membership_id': ('membership_id', 'str'),
-            'group_id': ('team_id', 'str'),
+            'team_id': ('team_id', 'str'), # <--- CHANGE THIS: Map CSV's 'team_id' directly to DB's 'team_id'
             'role_title': ('role_title', 'str'),
             'joined_at': ('joined_at', 'timestamp')
         }
