@@ -60,7 +60,8 @@ services:
       - ./dbt:/usr/app/dbt # Mount the dbt project into the container
       - ./dbt/profiles.yml:/root/.dbt/profiles.yml:ro # Mount profiles.yml
     working_dir: /usr/app/dbt # Set working directory to the dbt project root
-    entrypoint: dbt # Set dbt as the default command
+    entrypoint: dbt # This was changed in previous step, now we will call the python dbt directly
+    command: python -m dbt run # <--- CHANGE THIS LINE: Use 'python -m dbt run' instead of just 'dbt'
 
 volumes:
   postgres_data:
