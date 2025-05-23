@@ -10,14 +10,11 @@
     
     
 
-select
-    team_id as unique_field,
-    count(*) as n_records
 
-from "spond_analytics"."public"."stg_teams"
-where team_id is not null
-group by team_id
-having count(*) > 1
+
+select event_id
+from "spond_analytics"."public"."events_with_rsvps"
+where event_id is null
 
 
 

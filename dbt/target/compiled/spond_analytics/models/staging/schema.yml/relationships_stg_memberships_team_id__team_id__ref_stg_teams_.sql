@@ -4,13 +4,13 @@
 
 with child as (
     select team_id as from_field
-    from "spond_analytics"."public_public"."stg_memberships"
+    from "spond_analytics"."public"."stg_memberships"
     where team_id is not null
 ),
 
 parent as (
     select team_id as to_field
-    from "spond_analytics"."public_public"."stg_teams"
+    from "spond_analytics"."public"."stg_teams"
 )
 
 select

@@ -1,8 +1,13 @@
 
-  create view "spond_analytics"."public_public"."stg_teams__dbt_tmp"
+  
     
-    
-  as (
+
+  create  table "spond_analytics"."public"."stg_teams__dbt_tmp"
+  
+  
+    as
+  
+  (
     -- dbt/models/staging/stg_teams.sql
 SELECT
     team_id,
@@ -12,3 +17,4 @@ SELECT
 FROM
     "spond_analytics"."public"."raw_teams"
   );
+  

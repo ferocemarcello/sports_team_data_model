@@ -1,8 +1,13 @@
 
-  create view "spond_analytics"."public_public"."stg_event_rsvps__dbt_tmp"
+  
     
-    
-  as (
+
+  create  table "spond_analytics"."public"."stg_event_rsvps__dbt_tmp"
+  
+  
+    as
+  
+  (
     -- dbt/models/staging/stg_event_rsvps.sql
 SELECT
     event_rsvp_id AS rsvp_id,
@@ -13,3 +18,4 @@ SELECT
 FROM "spond_analytics"."public"."raw_event_rsvps"
 WHERE rsvp_status IN ('accepted', 'declined', 'pending') -- Keep this filter
   );
+  

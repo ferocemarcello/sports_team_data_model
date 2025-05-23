@@ -1,8 +1,13 @@
 
-  create view "spond_analytics"."public_public"."stg_events__dbt_tmp"
+  
     
-    
-  as (
+
+  create  table "spond_analytics"."public"."stg_events__dbt_tmp"
+  
+  
+    as
+  
+  (
     -- dbt/models/staging/stg_events.sql
 SELECT
     event_id,
@@ -17,3 +22,4 @@ SELECT
 FROM
     "spond_analytics"."public"."raw_events"
   );
+  

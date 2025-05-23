@@ -4,13 +4,13 @@
 
 with child as (
     select event_id as from_field
-    from "spond_analytics"."public_public"."stg_event_rsvps"
+    from "spond_analytics"."public"."stg_event_rsvps"
     where event_id is not null
 ),
 
 parent as (
     select event_id as to_field
-    from "spond_analytics"."public_public"."stg_events"
+    from "spond_analytics"."public"."stg_events"
 )
 
 select

@@ -1,3 +1,4 @@
+-- dbt/models/marts/events_with_rsvps.sql
 WITH event_rsvps_agg AS (
     SELECT
         event_id,
@@ -6,22 +7,22 @@ WITH event_rsvps_agg AS (
         COUNT(CASE WHEN status = 'declined' THEN rsvp_id END) AS declined_rsvps,
         COUNT(CASE WHEN status = 'pending' THEN rsvp_id END) AS pending_rsvps
     FROM
-        "spond_analytics"."public_public"."stg_event_rsvps"
+        "spond_analytics"."public"."stg_event_rsvps"
     GROUP BY
         event_id
 )
 
 SELECT
     e.event_id,
-    e.event_start, -- Changed from e.event_name and e.event_time
+    e.event_time,  -- CORRECTED: Change this line back to e.event_time
     e.event_end,
-    e.latitude,    -- Changed from e.location
+    e.latitude,
     e.longitude,
     COALESCE(era.total_rsvps, 0) AS total_rsvps,
     COALESCE(era.accepted_rsvps, 0) AS accepted_rsvps,
     COALESCE(era.declined_rsvps, 0) AS declined_rsvps,
     COALESCE(era.pending_rsvps, 0) AS pending_rsvps
 FROM
-    "spond_analytics"."public_public"."stg_events" AS e
+    "spond_analytics"."public"."stg_events" AS e
 LEFT JOIN
     event_rsvps_agg AS era ON e.event_id = era.event_id

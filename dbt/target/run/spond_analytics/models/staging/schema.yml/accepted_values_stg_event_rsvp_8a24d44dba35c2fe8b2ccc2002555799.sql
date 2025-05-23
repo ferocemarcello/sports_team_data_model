@@ -16,7 +16,7 @@ with all_values as (
         status as value_field,
         count(*) as n_records
 
-    from "spond_analytics"."public_public"."stg_event_rsvps"
+    from "spond_analytics"."public"."stg_event_rsvps"
     group by status
 
 )
