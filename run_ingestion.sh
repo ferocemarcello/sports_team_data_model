@@ -6,15 +6,41 @@ TERRAFORM_DIR="./terraform"
 echo "--- Setting up PostgreSQL with Docker Compose and Terraform ---"
 
 # 1. Stop and remove existing Docker Compose services and volumes for a clean start
-# This ensures a fresh database each time you run the script, which is good for testing.
 echo "Stopping and removing existing Docker Compose services and volumes (if any)..."
 docker-compose down -v
 
-# 2. Initialize Terraform and apply configuration to create ONLY the database
-# The 'null_resource.create_tables' will be removed from main.tf (see next step)
-# as ingest_data.py will handle creating tables.
+# 2. Start the PostgreSQL database service immediately
+echo "Starting PostgreSQL database service..."
+# We only bring up the 'db' service first, and ensure it's healthy
+docker-compose up -d --build db
+if [ $? -ne 0 ]; then
+  echo "Failed to start database service."
+  exit 1
+fi
+
+echo "Waiting for PostgreSQL database to be healthy..."
+# This waits for the healthcheck defined in docker-compose.yml for the 'db' service
+docker-compose wait db
+if [ $? -ne 0 ]; then
+  echo "PostgreSQL database did not become healthy."
+  exit 1
+fi
+echo "PostgreSQL database is up and healthy."
+
+# 3. Explicitly drop the database if it exists, to ensure a clean slate for Terraform
+# This helps if docker-compose down -v sometimes fails to remove the volume content or if a previous run left data.
+echo "Ensuring clean database state: Dropping 'spond_analytics' if it exists..."
+# Connect to the default 'postgres' database to drop 'spond_analytics'
+docker exec -i spond-postgres psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS spond_analytics;"
+if [ $? -ne 0 ]; then
+  echo "Failed to drop database 'spond_analytics'."
+  exit 1
+fi
+echo "Database 'spond_analytics' dropped (if it existed)."
+
+
+# 4. Initialize Terraform and apply configuration to create ONLY the database
 echo "Initializing Terraform..."
-# Remove old terraform state to ensure a fresh apply in development
 rm -f "$TERRAFORM_DIR"/terraform.tfstate*
 cd "$TERRAFORM_DIR" || { echo "Error: Missing terraform directory."; exit 1; }
 terraform init
@@ -23,29 +49,25 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 echo "Applying Terraform configuration to create database..."
-# Target only the database resource. This is more robust if you expand Terraform later.
 terraform apply -auto-approve -target=postgresql_database.spond_analytics
 if [ $? -ne 0 ]; then
   echo "Terraform apply failed."
   exit 1
 fi
-cd - > /dev/null # Go back to original directory
+cd - > /dev/null
 
-# 3. Start Docker Compose services (PostgreSQL and Data Ingestion)
-# The --build flag ensures the ingester image is rebuilt if Dockerfile or context changes.
-echo "Starting Docker Compose services (PostgreSQL and Data Ingestion)..."
-docker-compose up --build -d
+# 5. Now, start the ingester service (it depends on db, which is already running)
+echo "Starting Data Ingestion service..."
+docker-compose up -d --build ingester
 
-# 4. Wait for the ingester container to complete its job
+# 6. Wait for the ingester container to complete its job
 echo "Waiting for data ingestion to complete..."
-# Get the container ID of the ingester service
 INGESTER_CONTAINER_ID=$(docker-compose ps -q ingester)
 if [ -z "$INGESTER_CONTAINER_ID" ]; then
-  echo "Ingester container not found or not running. Check docker-compose logs."
+  echo "Ingester container not found. Check docker-compose.yml and logs."
   exit 1
 fi
 
-# Wait for the container to exit (0 for success, non-zero for error)
 docker wait "$INGESTER_CONTAINER_ID" > /dev/null
 INGESTER_EXIT_CODE=$?
 
@@ -55,7 +77,7 @@ else
   echo "Data ingestion process completed with errors (exit code: $INGESTER_EXIT_CODE)."
 fi
 
-# 5. Show logs for verification
+# 7. Show logs for verification (optional)
 echo "--- Ingestion Logs ---"
 docker-compose logs ingester
 
