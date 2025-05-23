@@ -1,7 +1,7 @@
 {{ config(materialized='table') }}
 
 SELECT
-    rsvp_id,
+    event_rsvp_id,
     event_id,
     membership_id,
     status,
