@@ -5,5 +5,5 @@ SELECT
     membership_id,
     status,
     rsvp_time
-FROM {{ source('public', 'raw_event_rsvps') }} -- <--- CHANGE THIS LINE
+FROM {{ source('public', 'raw_event_rsvps') }}
 WHERE rsvp_status IN ('accepted', 'declined', 'pending')

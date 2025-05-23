@@ -13,8 +13,8 @@ SELECT
     event_rsvp_id,
     event_id,
     membership_id,
-    rsvp_status AS status,
-    responded_at AS rsvp_time
+    status,
+    rsvp_time
 FROM "spond_analytics"."public"."event_rsvps" -- <--- CHANGE THIS LINE
 WHERE rsvp_status IN ('accepted', 'declined', 'pending')
   );
