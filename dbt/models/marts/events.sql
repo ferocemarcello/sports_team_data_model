@@ -8,4 +8,4 @@ SELECT
     latitude,
     longitude,
     created_at
-FROM {{ ref('stg_events') }}
+FROM {{ ref('events') }}

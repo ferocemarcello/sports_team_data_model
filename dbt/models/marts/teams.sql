@@ -8,4 +8,4 @@ SELECT
     country_code,
     created_at
 FROM
-    {{ ref('stg_teams') }}
+    {{ ref('teams') }}

@@ -5,4 +5,4 @@ SELECT
     team_id,
     role_title,
     joined_at
-FROM {{ ref('stg_memberships') }}
+FROM {{ ref('memberships') }}

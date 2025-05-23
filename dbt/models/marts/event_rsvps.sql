@@ -6,4 +6,4 @@ SELECT
     membership_id,
     rsvp_status,
     responded_at -- From stg_event_rsvps where responded_at AS rsvp_time
-FROM {{ ref('stg_event_rsvps') }}
+FROM {{ ref('event_rsvps') }}
