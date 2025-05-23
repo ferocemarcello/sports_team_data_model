@@ -11,7 +11,7 @@
     
 
 SELECT
-    membership_id,
+    membership_id
     team_id,
     role_title,
     joined_at
