@@ -3,14 +3,12 @@
     
     
   as (
-    -- dbt/models/staging/stg_memberships.sql
-SELECT
-    membership_id,
-    team_id,
-    -- member_id, -- This column is not directly in memberships.csv
-    -- is_admin::boolean as is_admin, -- This column is not directly in memberships.csv
-    role_title, -- From CSV
-    joined_at   -- From CSV
-FROM
-    "spond_analytics"."public"."raw_memberships"
+    SELECT
+    memberships.id AS membership_id,
+    memberships.team_id,
+    memberships.role_title,
+    memberships.joined_at
+FROM "spond_analytics"."public"."raw_memberships" AS memberships
+INNER JOIN "spond_analytics"."public"."raw_teams" AS teams -- Ensures team_id exists in raw_teams
+  ON memberships.team_id = teams.id
   );
