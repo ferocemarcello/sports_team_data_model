@@ -3,7 +3,7 @@ SELECT
     event_rsvp_id,
     event_id,
     membership_id,
-    status,
+    rsvp_status,
     rsvp_time
 FROM "spond_analytics"."public"."event_rsvps"
-WHERE status IN ('accepted', 'declined', 'pending')
+WHERE rsvp_status IN ('accepted', 'declined', 'pending')
