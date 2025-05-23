@@ -46,7 +46,7 @@ def setup_database(conn):
     cursor = conn.cursor()
     with open(SCHEMA_FILE, 'r') as f:
         schema_sql = f.read()
-    
+
     for statement in schema_sql.split(';'):
         if statement.strip():
             try:
@@ -93,25 +93,31 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
                         values.append(float(value) if value and value.lower() != 'null' else None)
                     else:
                         values.append(value)
-                
+
                 db_column_names = [info[0] for info in columns_mapping.values()]
                 placeholders = ', '.join(['%s'] * len(db_column_names))
                 insert_sql = f"INSERT INTO {table_name} ({', '.join(db_column_names)}) VALUES ({placeholders}) ON CONFLICT DO NOTHING;"
-                
+
                 cursor.execute(insert_sql, values)
                 ingested_rows += 1
 
+            except psycopg2.errors.ForeignKeyViolation as e:
+                # Suppress detailed print for ForeignKeyViolation (23503)
+                # Still count as skipped row and rollback
+                skipped_rows += 1
+                conn.rollback()
+                continue
             except psycopg2.Error as e:
-                # Capture and print detailed PostgreSQL error
+                # For any other psycopg2 error (like NotNullViolation 23502), print details
                 print(f"--- Error ingesting row {i+1} into {table_name} from {csv_file_path} ---")
                 print(f"  Row PK ({pk_col_name_db}): {row.get(pk_col_name_csv)}")
                 print(f"  PostgreSQL Error Code: {e.pgcode}")
-                print(f"  PostgreSQL Error Message: {e.pgerror.strip()}") # .pgerror gives the detailed error message
+                print(f"  PostgreSQL Error Message: {e.pgerror.strip()}")
                 print(f"  Problematic row data: {row}")
                 print("--------------------------------------------------")
                 skipped_rows += 1
-                conn.rollback() # Rollback the current transaction for this row to continue with next
-                continue # Continue to the next row
+                conn.rollback()
+                continue
             except Exception as e:
                 # Catch any other general exceptions
                 print(f"--- Unexpected Error ingesting row {i+1} into {table_name} from {csv_file_path} ---")
@@ -135,7 +141,7 @@ def main():
     conn = None
     try:
         conn = get_db_connection()
-        
+
         setup_database(conn)
 
         # Define column mappings for each table
@@ -145,9 +151,9 @@ def main():
             'country_code': ('country_code', 'str'),
             'created_at': ('created_at', 'timestamp')
         }
-        memberships_cols = { # Table renamed to memberships
+        memberships_cols = {
             'membership_id': ('membership_id', 'str'),
-            'team_id': ('team_id', 'str'), # <--- CHANGE THIS: Map CSV's 'team_id' directly to DB's 'team_id'
+            'team_id': ('team_id', 'str'), # Changed: Map CSV's 'team_id' directly to DB's 'team_id'
             'role_title': ('role_title', 'str'),
             'joined_at': ('joined_at', 'timestamp')
         }
