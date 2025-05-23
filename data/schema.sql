@@ -1,36 +1,38 @@
 -- data/schema.sql
 -- Create teams table
--- Note: created_at changed to BIGINT to store Unix epoch seconds
+-- Note: group_activity renamed to team_activity; created_at uses BIGINT for Unix epoch seconds
 CREATE TABLE IF NOT EXISTS teams (
     team_id VARCHAR(255) PRIMARY KEY,
-    group_activity VARCHAR(255) NOT NULL,
+    team_activity VARCHAR(255) NOT NULL,
     country_code VARCHAR(3) NOT NULL,
     created_at BIGINT NOT NULL
 );
 
 -- Create members table
--- Note: joined_at changed to BIGINT to store Unix epoch seconds
+-- Note: group_id renamed to team_id and references teams(team_id); joined_at uses BIGINT for Unix epoch seconds
 CREATE TABLE IF NOT EXISTS members (
     membership_id VARCHAR(255) PRIMARY KEY,
-    group_id VARCHAR(255) NOT NULL,
+    team_id VARCHAR(255) NOT NULL,
     role_title VARCHAR(255) NOT NULL,
     joined_at BIGINT NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES teams(team_id)
+    FOREIGN KEY (team_id) REFERENCES teams(team_id)
 );
 
 -- Create events table
--- Note: event_start, event_end, created_at changed to BIGINT to store Unix epoch seconds
+-- Note: event_start, event_end, created_at use BIGINT for Unix epoch seconds; added latitude and longitude
 CREATE TABLE IF NOT EXISTS events (
     event_id VARCHAR(255) PRIMARY KEY,
     team_id VARCHAR(255) NOT NULL,
     event_start BIGINT NOT NULL,
     event_end BIGINT NOT NULL,
     created_at BIGINT NOT NULL,
+    latitude FLOAT,
+    longitude FLOAT,
     FOREIGN KEY (team_id) REFERENCES teams(team_id)
 );
 
 -- Create event_rsvps table
--- Note: responded_at changed to BIGINT to store Unix epoch seconds
+-- Note: responded_at uses BIGINT for Unix epoch seconds
 CREATE TABLE IF NOT EXISTS event_rsvps (
     event_rsvp_id VARCHAR(255) PRIMARY KEY,
     event_id VARCHAR(255) NOT NULL,
