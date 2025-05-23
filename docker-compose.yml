@@ -34,13 +34,12 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
     volumes:
-      # These paths are relative to the docker-compose.yml location (project root)
-      # and map into the container's /app directory.
-      - ./teams.csv:/app/teams.csv:ro
-      - ./memberships.csv:/app/memberships.csv:ro
-      - ./events.csv:/app/events.csv:ro
-      - ./event_rsvps.csv:/app/event_rsvps.csv:ro
-    command: python ingest_data.py # Command to run the ingestion script
+      # Update these paths to point to the new 'data' directory
+      - ./data/teams.csv:/app/teams.csv:ro
+      - ./data/memberships.csv:/app/memberships.csv:ro
+      - ./data/events.csv:/app/events.csv:ro
+      - ./data/event_rsvps.csv:/app/event_rsvps.csv:ro
+    command: python ingest_data.py
 
   dbt-cli:
     build:
