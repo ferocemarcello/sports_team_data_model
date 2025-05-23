@@ -1,10 +1,10 @@
 # dbt/models/staging/schema.yml
 
 models:
-  - name: stg_event_rsvps
+  - name: event_rsvps
     description: Staging model for event RSVPs
     columns:
-      - name: event_rsvp_id # <--- CHANGE THIS FROM 'rsvp_id'
+      - name: event_rsvp_id
         description: Primary key for event RSVPs.
         tests:
           - not_null
@@ -13,22 +13,15 @@ models:
         description: Foreign key to events.
         tests:
           - not_null
-          # - relationships: # <--- COMMENT OUT THIS LINE
-          #     to: ref('stg_events')
-          #     field: event_id # <--- COMMENT OUT THIS LINE
       - name: membership_id
         description: Foreign key to memberships.
         tests:
           - not_null:
-              severity: warn # <--- ADD THIS LINE (with correct indentation)
-          # - relationships: # <--- COMMENT OUT THIS LINE
-          #     to: ref('stg_memberships')
-          #     field: membership_id # <--- COMMENT OUT THIS LINE
+              severity: warn
       - name: rsvp_status
         description: RSVP status (0, 1, 2).
         tests:
           - accepted_values:
               values: ['0', '1', '2']
-      - name: rsvp_time # This is the renamed column from responded_at
+      - name: responded_at
         description: Timestamp of when the RSVP was responded.
-        # You might want to add a not_null test here if it's always expected
