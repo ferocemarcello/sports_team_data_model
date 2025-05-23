@@ -23,3 +23,17 @@ models:
               values: ['0', '1', '2']
       - name: responded_at
         description: Timestamp of when the RSVP was responded.
+- name: teams
+    description: Staging model for teams data, filtered for valid types and country codes.
+    columns:
+      - name: team_id
+        description: Unique integer identifier for the team.
+        tests:
+          - not_null
+          - unique
+      - name: team_activity
+        description: The primary activity of the team (string).
+      - name: country_code
+        description: Alpha-3 country code of the team's origin.
+      - name: created_at
+        description: UTC timestamp of when the team record was created (ISO 8601 format).
