@@ -3,6 +3,7 @@ import json
 import sqlite3
 from datetime import datetime
 
+# Assuming these are correct from previous context
 DATABASE_FILE = 'data/spond_data.db'
 SCHEMA_FILE = 'data/schema.sql'
 
@@ -32,7 +33,6 @@ def ingest_teams(conn, csv_file_path):
         reader = csv.DictReader(f)
         for row in reader:
             team_id = row['team_id']
-            # 'group_activity' from CSV maps to 'team_activity' in DB
             team_activity = row['team_activity']
             country_code = row['country_code']
             created_at = parse_iso_timestamp(row['created_at'])
@@ -42,26 +42,26 @@ def ingest_teams(conn, csv_file_path):
                 VALUES (?, ?, ?, ?)
             """, (team_id, team_activity, country_code, created_at))
     conn.commit()
-    print(f"Ingested data into teams from {csv_file_path}")
+    print(f"Successfully ingested data into teams from {csv_file_path}")
 
 def ingest_memberships(conn, csv_file_path):
-    """Ingests data into the members table."""
+    """Ingests data into the memberships table."""
     cursor = conn.cursor()
     with open(csv_file_path, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
             membership_id = row['membership_id']
-            # 'group_id' from CSV maps to 'team_id' in DB
-            team_id = row['group_id']
+            team_id = row['group_id'] # CSV uses 'group_id', maps to 'team_id' in DB
             role_title = row['role_title']
             joined_at = parse_iso_timestamp(row['joined_at'])
 
             cursor.execute("""
-                INSERT OR IGNORE INTO members (membership_id, team_id, role_title, joined_at)
+                INSERT OR IGNORE INTO memberships (membership_id, team_id, role_title, joined_at)
                 VALUES (?, ?, ?, ?)
             """, (membership_id, team_id, role_title, joined_at))
     conn.commit()
-    print(f"Ingested data into members from {csv_file_path}")
+    print(f"Successfully ingested data into memberships from {csv_file_path}")
+
 
 def ingest_events(conn, csv_file_path):
     """Ingests data into the events table."""
@@ -74,7 +74,7 @@ def ingest_events(conn, csv_file_path):
             event_start = parse_iso_timestamp(row['event_start'])
             event_end = parse_iso_timestamp(row['event_end'])
             created_at = parse_iso_timestamp(row['created_at'])
-            
+
             # Handle new latitude and longitude fields, converting 'null' strings to None
             latitude = float(row['latitude']) if row['latitude'] and row['latitude'].lower() != 'null' else None
             longitude = float(row['longitude']) if row['longitude'] and row['longitude'].lower() != 'null' else None
@@ -84,7 +84,8 @@ def ingest_events(conn, csv_file_path):
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (event_id, team_id, event_start, event_end, created_at, latitude, longitude))
     conn.commit()
-    print(f"Ingested data into events from {csv_file_path}")
+    print(f"Successfully ingested data into events from {csv_file_path}")
+
 
 def ingest_event_rsvps(conn, csv_file_path):
     """Ingests data into the event_rsvps table."""
@@ -103,17 +104,19 @@ def ingest_event_rsvps(conn, csv_file_path):
                 VALUES (?, ?, ?, ?, ?)
             """, (event_rsvp_id, event_id, member_id, rsvp_status, responded_at))
     conn.commit()
-    print(f"Ingested data into event_rsvps from {csv_file_path}")
+    print(f"Successfully ingested data into event_rsvps from {csv_file_path}")
 
 def main():
     conn = None
     try:
-        conn = sqlite3.connect(DATABASE_FILE)
-        setup_database(conn)
+        conn = sqlite3.connect(DATABASE_FILE) # Note: This is still using SQLite, not PostgreSQL.
+                                              # The `run_ingestion.sh` script should be updated to pass DB_HOST, DB_PORT etc.
+                                              # for connecting to PostgreSQL.
+        setup_database(conn) # This will create the schema in the SQLite DB, not PostgreSQL.
 
         # Ingest data from the provided CSV files
         ingest_teams(conn, 'data/teams.csv')
-        ingest_memberships(conn, 'data/memberships.csv')
+        ingest_memberships(conn, 'data/memberships.csv') # Changed from ingest_members
         ingest_events(conn, 'data/events.csv')
         ingest_event_rsvps(conn, 'data/event_rsvps.csv')
 
