@@ -400,7 +400,19 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-# Terraform
+# dbt artifacts and local files
+dbt/target/
+.user.yml
+dbt_modules/
+logs/
+
+# Terraform generated files and local configuration
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/.terraform.d/
+terraform/*.tfstate # Ignore Terraform state files
+terraform/*.tfstate.backup # Ignore Terraform state backup files
+terraform/.terraformrc # Ignore Terraform CLI configuration file
 .terraform/
 *.tfplan
 *.tfstate
