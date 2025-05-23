@@ -10,20 +10,18 @@ def create_raw_table_if_not_exists(table_name, df_columns, cur):
     """
     column_defs = []
     for col in df_columns:
-        # Simplified type inference for raw tables: mostly TEXT
-        # Let dbt handle more precise casting in staging models
         if 'id' in col or 'code' in col or 'title' in col or 'name' in col or 'status' in col:
-            pg_type = 'VARCHAR(255)' # IDs, codes, titles, names, statuses are often strings
+            pg_type = 'VARCHAR(255)'
         elif 'time' in col or 'date' in col:
-            pg_type = 'TIMESTAMP' # For timestamps
+            pg_type = 'TIMESTAMP'
         elif 'latitude' in col or 'longitude' in col:
-            pg_type = 'NUMERIC' # For numeric coordinates
+            pg_type = 'NUMERIC'
         elif 'is_admin' in col:
             pg_type = 'BOOLEAN'
         else:
-            pg_type = 'TEXT' # Default to TEXT for everything else
+            pg_type = 'TEXT'
 
-        column_defs.append(f'"{col}" {pg_type}') # Quote column names to preserve case if needed, though pandas lowercases
+        column_defs.append(f'"{col}" {pg_type}')
 
     create_table_sql = f"""
     CREATE TABLE IF NOT EXISTS public.{table_name} (
@@ -43,14 +41,7 @@ def ingest_csv_to_postgres(filepath, table_name, conn):
         df = pd.read_csv(filepath)
         print(f"Read {len(df)} rows from {filepath}")
 
-        # Ensure column names are PostgreSQL-compatible (lowercase, no special chars)
-        # IMPORTANT: Pandas reads headers as they are. The `df.columns` will be the exact header names.
-        # PostgreSQL will lowercase unquoted identifiers. Our create_raw_table_if_not_exists
-        # now quotes column names, so we should use the exact case from CSV header.
-        # However, for consistency with dbt's default lowercasing, let's keep lowercasing here.
-        # The key is that the `create_raw_table_if_not_exists` must match what pandas produces.
         df.columns = [col.lower().replace(' ', '_').replace('.', '_') for col in df.columns]
-
 
         with conn.cursor() as cur:
             # Create table if not exists based on CSV headers
@@ -60,6 +51,12 @@ def ingest_csv_to_postgres(filepath, table_name, conn):
             cur.execute(f"TRUNCATE TABLE public.{table_name} RESTART IDENTITY;")
             print(f"Truncated table public.{table_name}.")
 
+            # --- CRITICAL CHANGE: COMMIT DDL OPERATIONS IMMEDIATELY ---
+            # This ensures CREATE TABLE and TRUNCATE are visible before COPY
+            conn.commit()
+            print(f"Committed table creation and truncation for public.{table_name}.")
+
+
             # Use the copy_from method for efficient ingestion
             buffer = StringIO()
             df.to_csv(buffer, index=False, header=False)
@@ -67,10 +64,15 @@ def ingest_csv_to_postgres(filepath, table_name, conn):
 
             cur.copy_from(buffer, f'public.{table_name}', sep=',')
             print(f"Successfully copied data to public.{table_name}.")
+        
+        # Commit the COPY_FROM operation
         conn.commit()
 
     except Exception as e:
         print(f"Error ingesting {filepath} to public.{table_name}: {e}")
+        # --- CRITICAL CHANGE: Re-raise the exception ---
+        # This will cause the Python script to exit with a non-zero code,
+        # which run_ingestion.sh will then catch.
         raise
 
 if __name__ == "__main__":
@@ -84,7 +86,7 @@ if __name__ == "__main__":
         'teams': 'teams.csv',
         'memberships': 'memberships.csv',
         'events': 'events.csv',
-        'event_rsvps': 'event_rsvps.csv', # This is the file for raw_event_rsvps
+        'event_rsvps': 'event_rsvps.csv',
     }
 
     conn = None
@@ -99,14 +101,12 @@ if __name__ == "__main__":
         print("Connected to PostgreSQL successfully!")
 
         for table_name_key, filename in csv_files.items():
-            filepath = f"/app/{filename}" # Path within the Docker container
-            # Use the key from csv_files dict as the table name for PostgreSQL
-            # This will create tables named 'teams', 'memberships', 'events', 'event_rsvps'
+            filepath = f"/app/{filename}"
             ingest_csv_to_postgres(filepath, table_name_key, conn)
 
     except Exception as e:
         print(f"Database connection or ingestion failed: {e}")
-        exit(1)
+        exit(1) # Exit with an error code
     finally:
         if conn:
             conn.close()
