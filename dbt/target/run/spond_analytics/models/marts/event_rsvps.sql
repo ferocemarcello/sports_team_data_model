@@ -15,7 +15,7 @@ SELECT
     event_id,
     membership_id,
     rsvp_status,
-    rsvp_time -- From stg_event_rsvps where responded_at AS rsvp_time
+    responded_at -- From stg_event_rsvps where responded_at AS rsvp_time
 FROM "spond_analytics"."public"."stg_event_rsvps"
   );
   

@@ -6,4 +6,3 @@ SELECT
     rsvp_status,
     responded_at
 FROM {{ source('public', 'raw_event_rsvps') }}
-WHERE rsvp_status IN ('accepted', 'declined', 'pending')
