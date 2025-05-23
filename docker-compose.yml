@@ -20,8 +20,9 @@ services:
 
   ingester:
     build:
-      context: .
-      dockerfile: ./ingestion/Dockerfile # We'll create this Dockerfile
+      # Change the context to the 'ingestion' directory
+      context: ./ingestion # <--- CHANGE THIS LINE
+      dockerfile: Dockerfile # <--- CHANGE THIS LINE (no longer needs ./ingestion/)
     container_name: spond-ingester
     depends_on:
       db:
@@ -33,6 +34,8 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
     volumes:
+      # These paths are relative to the docker-compose.yml location (project root)
+      # and map into the container's /app directory.
       - ./teams.csv:/app/teams.csv:ro
       - ./memberships.csv:/app/memberships.csv:ro
       - ./events.csv:/app/events.csv:ro
@@ -48,7 +51,6 @@ services:
       db:
         condition: service_healthy # Ensure DB is ready for dbt
     environment:
-      # dbt profile variables
       DBT_POSTGRES_HOST: db # Hostname for services within Docker network
       DBT_POSTGRES_PORT: 5432
       DBT_POSTGRES_USER: postgres
