@@ -25,3 +25,32 @@ models:
               values: ['0', '1', '2']
       - name: responded_at
         description: Timestamp of when the RSVP was responded.
+seeds:
+  - name: country_codes
+    description: "List of valid ISO 3166-1 country codes and associated data."
+    columns:
+      - name: name
+        description: "The full country name."
+      - name: alpha-2
+        description: "The 2-letter Alpha-2 country code."
+      - name: alpha-3
+        description: "The 3-letter Alpha-3 country code. Used for filtering teams."
+        tests:
+          - not_null
+          - unique
+      - name: country-code
+        description: "The numeric country code."
+      - name: iso_3166-2
+        description: "ISO 3166-2 subdivision code (e.g., US-CA)."
+      - name: region
+        description: "Geographic region."
+      - name: sub-region
+        description: "Geographic sub-region."
+      - name: intermediate-region
+        description: "Geographic intermediate-region."
+      - name: region-code
+        description: "Numeric region code."
+      - name: sub-region-code
+        description: "Numeric sub-region code."
+      - name: intermediate-region-code
+        description: "Numeric intermediate-region code."
