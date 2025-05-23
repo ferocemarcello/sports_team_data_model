@@ -47,18 +47,14 @@ def setup_database(conn):
     with open(SCHEMA_FILE, 'r') as f:
         schema_sql = f.read()
     
-    # Execute each statement separately
-    # This is important for psycopg2 which doesn't support multiple statements directly with execute()
-    # It also helps catch errors in individual statements.
     for statement in schema_sql.split(';'):
-        if statement.strip(): # Ensure not to execute empty statements
+        if statement.strip():
             try:
                 cursor.execute(statement)
             except psycopg2.Error as e:
-                # Catch specific error for "relation already exists" from IF NOT EXISTS
                 if 'already exists' in str(e) and 'CREATE TABLE IF NOT EXISTS' in statement:
-                    # print(f"Table already exists, skipping: {statement.strip().splitlines()[0]}...")
-                    conn.rollback() # Rollback the current transaction if an error occurs
+                    print(f"Table already exists, skipping: {statement.strip().splitlines()[0]}...")
+                    conn.rollback()
                 else:
                     print(f"Error executing schema statement: {statement.strip()}")
                     raise e
@@ -73,15 +69,19 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
     ingested_rows = 0
     skipped_rows = 0
 
+    # Determine the primary key column name for logging, assuming first column in mapping is PK
+    pk_col_name_csv = next(iter(columns_mapping))
+    pk_col_name_db = columns_mapping[pk_col_name_csv][0]
+
+
     with open(csv_file_path, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for i, row in enumerate(reader):
             try:
-                # Prepare data for insertion
                 values = []
                 for csv_col, db_col_info in columns_mapping.items():
                     db_col_name = db_col_info[0]
-                    col_type = db_col_info[1] # e.g., 'str', 'int', 'float', 'timestamp'
+                    col_type = db_col_info[1]
 
                     value = row.get(csv_col)
 
@@ -90,12 +90,10 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
                     elif col_type == 'int':
                         values.append(int(value) if value else None)
                     elif col_type == 'float':
-                        # Handle 'null' string from CSV or empty strings
                         values.append(float(value) if value and value.lower() != 'null' else None)
-                    else: # Default to string
+                    else:
                         values.append(value)
                 
-                # Construct INSERT statement dynamically
                 db_column_names = [info[0] for info in columns_mapping.values()]
                 placeholders = ', '.join(['%s'] * len(db_column_names))
                 insert_sql = f"INSERT INTO {table_name} ({', '.join(db_column_names)}) VALUES ({placeholders}) ON CONFLICT DO NOTHING;"
@@ -103,12 +101,28 @@ def ingest_data_from_csv(conn, csv_file_path, table_name, columns_mapping, times
                 cursor.execute(insert_sql, values)
                 ingested_rows += 1
 
-            except Exception as e:
-                # print(f"Error ingesting row {i+1} from {csv_file_path} into {table_name}: {e}")
-                # print(f"Problematic row: {row}")
+            except psycopg2.Error as e:
+                # Capture and print detailed PostgreSQL error
+                print(f"--- Error ingesting row {i+1} into {table_name} from {csv_file_path} ---")
+                print(f"  Row PK ({pk_col_name_db}): {row.get(pk_col_name_csv)}")
+                print(f"  PostgreSQL Error Code: {e.pgcode}")
+                print(f"  PostgreSQL Error Message: {e.pgerror.strip()}") # .pgerror gives the detailed error message
+                print(f"  Problematic row data: {row}")
+                print("--------------------------------------------------")
                 skipped_rows += 1
                 conn.rollback() # Rollback the current transaction for this row to continue with next
                 continue # Continue to the next row
+            except Exception as e:
+                # Catch any other general exceptions
+                print(f"--- Unexpected Error ingesting row {i+1} into {table_name} from {csv_file_path} ---")
+                print(f"  Row PK ({pk_col_name_db}): {row.get(pk_col_name_csv)}")
+                print(f"  Error Type: {type(e).__name__}")
+                print(f"  Error Message: {e}")
+                print(f"  Problematic row data: {row}")
+                print("--------------------------------------------------")
+                skipped_rows += 1
+                conn.rollback()
+                continue
 
     conn.commit()
     cursor.close()
@@ -122,20 +136,18 @@ def main():
     try:
         conn = get_db_connection()
         
-        # Setup database schema - this will re-create tables if they don't exist
-        # or if the schema hash in terraform.tfstate changes.
         setup_database(conn)
 
         # Define column mappings for each table
         teams_cols = {
             'team_id': ('team_id', 'str'),
-            'team_activity': ('team_activity', 'str'), # Renamed from group_activity
+            'team_activity': ('team_activity', 'str'),
             'country_code': ('country_code', 'str'),
             'created_at': ('created_at', 'timestamp')
         }
-        memberships_cols = { # Table renamed to memberships
+        memberships_cols = {
             'membership_id': ('membership_id', 'str'),
-            'team_id': ('team_id', 'str'), # NOW DIRECTLY REFERENCES 'team_id' FROM CSV
+            'group_id': ('team_id', 'str'),
             'role_title': ('role_title', 'str'),
             'joined_at': ('joined_at', 'timestamp')
         }
@@ -145,13 +157,13 @@ def main():
             'event_start': ('event_start', 'timestamp'),
             'event_end': ('event_end', 'timestamp'),
             'created_at': ('created_at', 'timestamp'),
-            'latitude': ('latitude', 'float'), # New column
-            'longitude': ('longitude', 'float') # New column
+            'latitude': ('latitude', 'float'),
+            'longitude': ('longitude', 'float')
         }
         event_rsvps_cols = {
             'event_rsvp_id': ('event_rsvp_id', 'str'),
             'event_id': ('event_id', 'str'),
-            'membership_id': ('member_id', 'str'), # CSV 'membership_id' maps to DB 'member_id'
+            'membership_id': ('member_id', 'str'),
             'rsvp_status': ('rsvp_status', 'int'),
             'responded_at': ('responded_at', 'timestamp')
         }
