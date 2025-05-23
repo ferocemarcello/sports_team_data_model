@@ -1,9 +1,10 @@
--- dbt/models/staging/stg_event_rsvps.sql
 SELECT
-    event_rsvp_id AS rsvp_id,    -- Renaming event_rsvp_id to rsvp_id
-    event_id,
-    membership_id AS member_id, -- Assuming membership_id maps to member_id
-    rsvp_status AS status,      -- Renaming rsvp_status to status
-    responded_at AS rsvp_time   -- Renaming responded_at to rsvp_time
-FROM
-    {{ source('public', 'raw_event_rsvps') }}
+    rsvps.id AS rsvp_id,
+    rsvps.event_id,
+    rsvps.member_id,
+    rsvps.rsvp_status AS status,
+    rsvps.rsvp_time
+FROM {{ source('public', 'raw_event_rsvps') }} AS rsvps
+INNER JOIN {{ source('public', 'raw_events') }} AS events -- Ensures event_id exists in raw_events
+  ON rsvps.event_id = events.id
+WHERE rsvps.rsvp_status IN ('accepted', 'declined', 'pending') -- Filters for accepted status values
