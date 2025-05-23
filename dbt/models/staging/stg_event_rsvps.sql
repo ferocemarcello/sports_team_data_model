@@ -3,7 +3,7 @@ SELECT
     event_rsvp_id,
     event_id,
     membership_id,
-    rsvp_status,   -- Keep the original raw column name
-    responded_at   -- Keep the original raw column name
-FROM {{ source('public', 'event_rsvps') }}
+    rsvp_status AS status,
+    responded_at AS rsvp_time
+FROM {{ source('public', 'raw_event_rsvps') }} -- <--- CHANGE THIS LINE
 WHERE rsvp_status IN ('accepted', 'declined', 'pending')

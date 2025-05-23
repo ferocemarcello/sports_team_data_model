@@ -12,5 +12,5 @@ sources:
         identifier: memberships
       - name: raw_events
         identifier: events
-      - name: raw_event_rsvps # <--- What is the 'name' here?
-        identifier: event_rsvps # <--- What is the 'identifier' here?
+      - name: raw_event_rsvps
+        identifier: event_rsvps
