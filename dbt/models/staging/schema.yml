@@ -1,69 +1,14 @@
-version: 2
+# dbt/models/staging/schema.yml
 
 models:
-  - name: stg_teams
-    description: Staging model for raw teams data.
-    columns:
-      - name: team_id
-        description: Unique identifier for the team.
-        tests:
-          - unique
-          - not_null
-      - name: team_name
-        description: Name of the team.
-      - name: team_created_at
-        description: Timestamp when the team was created.
-
-  - name: stg_memberships
-    description: Staging model for raw memberships data.
-    columns:
-      - name: membership_id
-        description: Unique identifier for the membership.
-        tests:
-          - unique
-          - not_null
-      - name: team_id
-        description: Foreign key to teams.
-        tests:
-          - not_null
-          - relationships:
-              to: ref('stg_teams')
-              field: team_id
-      - name: role_title # Add this line to document the column from CSV
-        description: Role title of the member in the team.
-      - name: joined_at # Add this line to document the column from CSV
-        description: Timestamp when the member joined the team.
-
-  - name: stg_events
-    description: Staging model for raw events data.
-    columns:
-      - name: event_id
-        description: Unique identifier for the event.
-        tests:
-          - unique
-          - not_null
-      - name: team_id
-        description: Foreign key to teams.
-        tests:
-          - not_null
-          - relationships:
-              to: ref('stg_teams')
-              field: team_id
-      - name: event_name
-        description: Name of the event.
-      - name: event_time
-        description: Timestamp of the event.
-      - name: location
-        description: Location of the event.
-
   - name: stg_event_rsvps
-    description: Staging model for raw event RSVPs data.
+    description: Staging model for event RSVPs
     columns:
-      - name: rsvp_id
-        description: Unique identifier for the RSVP.
+      - name: event_rsvp_id # <--- CHANGE THIS FROM 'rsvp_id'
+        description: Primary key for event RSVPs.
         tests:
-          - unique
           - not_null
+          - unique
       - name: event_id
         description: Foreign key to events.
         tests:
@@ -72,13 +17,17 @@ models:
               to: ref('stg_events')
               field: event_id
       - name: membership_id
-        description: Identifier for the member.
+        description: Foreign key to memberships.
         tests:
           - not_null
-      - name: status
-        description: RSVP status (e.g., accepted, declined, pending).
+          - relationships:
+              to: ref('stg_memberships')
+              field: membership_id # Assuming you have a membership_id in stg_memberships
+      - name: status # This is the renamed column from rsvp_status
+        description: RSVP status (accepted, declined, pending).
         tests:
           - accepted_values:
               values: ['accepted', 'declined', 'pending']
-      - name: rsvp_time
-        description: Timestamp when the RSVP was made.
+      - name: rsvp_time # This is the renamed column from responded_at
+        description: Timestamp of when the RSVP was responded.
+        # You might want to add a not_null test here if it's always expected
