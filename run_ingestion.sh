@@ -80,24 +80,27 @@ else
   exit 1 # Crucially, exit here if ingestion failed so dbt doesn't run on empty tables
 fi
 
-echo "Waiting for data ingestion to complete..."
-INGESTER_CONTAINER_ID=$(docker-compose ps -q ingester)
-if [ -z "$INGESTER_CONTAINER_ID" ]; then
-  echo "Ingester container not found after starting. Check docker-compose.yml and logs."
-  exit 1
-fi
+# --- NEW DEBUGGING: Verify data exists from a fresh psql connection before dbt runs ---
+echo "--- Verifying ingested data with psql directly from the db container ---"
+sleep 1 # Give a very brief moment, though not strictly necessary after ingestion success
 
-# Wait for the ingester container to exit (as it's a one-off task)
-docker wait "$INGESTER_CONTAINER_ID" > /dev/null
-INGESTER_EXIT_CODE=$?
+# Define the tables to check
+TABLES=("teams" "memberships" "events" "event_rsvps")
 
-if [ "$INGESTER_EXIT_CODE" -eq 0 ]; then
-  echo "Data ingestion process completed successfully."
-else
-  echo "Data ingestion process completed with errors (exit code: $INGESTER_EXIT_CODE)."
-  # Optionally, exit here if ingestion failure should stop the whole pipeline
-  exit 1
-fi
+# Loop through each table and try to count rows
+for TABLE in "${TABLES[@]}"; do
+  echo "Checking public.$TABLE existence and row count..."
+  docker exec -i spond-postgres psql -U postgres -d spond_analytics -c "SELECT COUNT(*) FROM public.$TABLE;"
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Table public.$TABLE could not be queried by psql. This indicates a deeper database access issue."
+    exit 1 # Stop the script if psql can't even see the tables
+  else
+    echo "SUCCESS: public.$TABLE queried successfully by psql."
+  fi
+done
+
+echo "--- psql verification complete. Proceeding with dbt build ---"
+
 
 # 6. Run dbt to build models and tests
 echo "Running dbt transformations and tests..."
@@ -113,20 +116,16 @@ echo "dbt transformations and tests completed successfully."
 echo "--- Pipeline Execution Complete ---"
 
 # 7. Show logs for verification (optional)
-echo "--- Ingestion Logs ---"
-docker-compose logs ingester
-
-echo "--- dbt Logs ---"
-# You might need to adjust this if dbt run produces logs in a different container after --rm
-# Consider docker-compose logs spond-dbt-cli if you want to see the last dbt logs.
+# No need for separate 'docker-compose logs ingester' anymore as logs are streamed directly in Step 5
 
 echo "--- Verification ---"
 echo "You can connect to the database to verify data:"
 echo "psql -h localhost -p 5432 -U postgres -d spond_analytics"
 echo "Then run queries like: "
-echo "SELECT COUNT(*) FROM raw_teams;"
-echo "SELECT COUNT(*) FROM stg_teams;"
 echo "SELECT COUNT(*) FROM teams;"
+echo "SELECT COUNT(*) FROM memberships;"
+echo "SELECT COUNT(*) FROM events;"
+echo "SELECT COUNT(*) FROM event_rsvps;"
 echo "SELECT * FROM events_with_rsvps LIMIT 5;"
 
 # Optional: Keep services running for inspection, or add docker-compose down here to clean up
