@@ -7,11 +7,12 @@ echo "--- Setting up PostgreSQL with Docker Compose and Terraform ---"
 
 # 1. Stop and remove existing Docker Compose services and volumes for a clean start
 echo "Stopping and removing existing Docker Compose services and volumes (if any)..."
+# Forcefully remove any lingering container with the specific name
+docker rm -f spond-postgres 2>/dev/null || true # <--- ADD THIS LINE
 docker-compose down -v
 
 # 2. Start the PostgreSQL database service immediately
 echo "Starting PostgreSQL database service..."
-# We only bring up the 'db' service first, and ensure it's healthy
 docker-compose up -d --build db
 if [ $? -ne 0 ]; then
   echo "Failed to start database service."
@@ -19,7 +20,6 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Waiting for PostgreSQL database to be healthy..."
-# This waits for the healthcheck defined in docker-compose.yml for the 'db' service
 docker-compose wait db
 if [ $? -ne 0 ]; then
   echo "PostgreSQL database did not become healthy."
@@ -30,7 +30,6 @@ echo "PostgreSQL database is up and healthy."
 # 3. Explicitly drop the database if it exists, to ensure a clean slate for Terraform
 # This helps if docker-compose down -v sometimes fails to remove the volume content or if a previous run left data.
 echo "Ensuring clean database state: Dropping 'spond_analytics' if it exists..."
-# Connect to the default 'postgres' database to drop 'spond_analytics'
 docker exec -i spond-postgres psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS spond_analytics;"
 if [ $? -ne 0 ]; then
   echo "Failed to drop database 'spond_analytics'."
