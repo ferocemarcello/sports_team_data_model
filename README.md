@@ -65,7 +65,7 @@ Follow these steps from your terminal, in the root directory of your `spond_proj
     ```bash
     chmod +x run_ingestion.sh
     ```
-    
+
 * **Run the ingestion script:**
     ```bash
     ./run_ingestion.sh
