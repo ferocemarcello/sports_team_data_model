@@ -1,12 +1,13 @@
-# Use a lightweight base image, like alpine/git which often has curl and unzip
-FROM alpine/git:latest
+# Dockerfile.terraform
+FROM alpine:latest
 
 # Define the Terraform version you want to install
-ARG TERRAFORM_VERSION="1.8.0" # You can choose a different stable version if you prefer
+ARG TERRAFORM_VERSION="1.8.0"
 
 # Install necessary tools (curl for download, unzip for extraction)
 RUN apk add --no-cache curl unzip \
     # Download the Terraform binary for Linux AMD64
+    # TYPO FIXED HERE: 'TERRAFM_VERSION' changed to 'TERRAFORM_VERSION'
     && curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" \
     # Unzip the binary into /usr/local/bin (which is commonly in the PATH)
     && unzip "terraform_${TERRAFORM_VERSION}_linux_amd64.zip" -d /usr/local/bin \
