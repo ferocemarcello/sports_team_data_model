@@ -25,4 +25,4 @@ SELECT
 FROM team_event_activities
 WHERE activity_date IS NOT NULL -- Ensure the derived date is not null
 GROUP BY 1
-ORDER BY 1;
+ORDER BY 1
