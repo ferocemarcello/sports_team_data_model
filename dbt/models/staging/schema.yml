@@ -55,3 +55,31 @@ models:
       - name: created_at
         tests:
           - not_null
+  - name: stg_events
+    description: Staging model for events data.
+    columns:
+      - name: event_id
+        tests:
+          - not_null
+          - unique
+      - name: team_id
+        tests:
+          - not_null
+      - name: event_start
+        description: UTC timestamp of when the event starts, in seconds since epoch.
+        tests:
+          - not_null
+      - name: event_end
+        description: UTC timestamp of when the event ends, in seconds since epoch.
+        tests:
+          - not_null
+      - name: latitude
+        tests:
+          - not_null
+      - name: longitude
+        tests:
+          - not_null
+      - name: created_at
+        description: UTC timestamp of when the event starts, in seconds since epoch.
+        tests:
+          - not_null
