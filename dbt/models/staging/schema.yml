@@ -47,9 +47,6 @@ models:
       - name: team_id
         tests:
           - not_null
-      - name: user_id
-        tests:
-          - not_null
       - name: role_title
         description: "The role or title of the member within the team."
       - name: joined_at

@@ -5,8 +5,8 @@ SELECT
     CASE WHEN events.team_id ~ '^[0-9]+$' THEN events.team_id::INT ELSE NULL END AS team_id,
     EXTRACT(EPOCH FROM events.event_start)::BIGINT AS event_start,
     EXTRACT(EPOCH FROM events.event_end)::BIGINT AS event_end,
-    CASE WHEN events.latitude ~ '^-?\d+(\.\d+)?$' THEN events.latitude::NUMERIC ELSE NULL END AS latitude,
-    CASE WHEN events.longitude ~ '^-?\d+(\.\d+)?$' THEN events.longitude::NUMERIC ELSE NULL END AS longitude,
+    events.latitude,
+    events.longitude,
     EXTRACT(EPOCH FROM events.created_at)::BIGINT AS created_at
 FROM
     {{ ref('events') }} AS events
@@ -16,7 +16,7 @@ WHERE
     (CASE WHEN events.team_id ~ '^[0-9]+$' THEN events.team_id::INT ELSE NULL END) IS NOT NULL AND
     events.event_start IS NOT NULL AND
     events.event_end IS NOT NULL AND
-    (CASE WHEN events.latitude ~ '^-?\d+(\.\d+)?$' THEN events.latitude::NUMERIC ELSE NULL END) IS NOT NULL AND
-    (CASE WHEN events.longitude ~ '^-?\d+(\.\d+)?$' THEN events.longitude::NUMERIC ELSE NULL END) IS NOT NULL AND
+    events.latitude IS NOT NULL AND
+    events.longitude IS NOT NULL AND
     (CASE WHEN events.event_end ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN events.event_end::TIMESTAMPTZ ELSE NULL END) IS NOT NULL AND
     events.created_at IS NOT NULL
