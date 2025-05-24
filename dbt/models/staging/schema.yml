@@ -76,7 +76,7 @@ models:
       - name: longitude
         tests:
           - not_null
-      - name: joined_at
+      - name: created_at
         description: UTC timestamp of when the event starts, in seconds since epoch.
         tests:
           - not_null
