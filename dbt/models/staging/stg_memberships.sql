@@ -9,4 +9,4 @@ FROM
 WHERE
     memberships.membership_id IS NOT NULL AND
     memberships.team_id IS NOT NULL AND
-    memberships.role_title IS NOT IN ('admin, member')
+    memberships.role_title NOT IN ('admin, member')
