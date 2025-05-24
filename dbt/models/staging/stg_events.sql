@@ -1,7 +1,7 @@
 -- dbt/models/staging/events.sql
 SELECT
-    TRY_CAST(event_id AS INT) AS event_id,      -- Keep as VARCHAR if it's a string ID
-    TRY_CAST(team_id AS INT) AS team_id,        -- Keep as VARCHAR if it's a string ID
+    TRY_CAST(event_id AS INT) AS event_id,
+    TRY_CAST(team_id AS INT) AS team_id,
     TRY_CAST(event_time AS TIMESTAMPTZ) AS event_time,
     TRY_CAST(event_end AS TIMESTAMPTZ) AS event_end,
     TRY_CAST(latitude AS NUMERIC) AS latitude,

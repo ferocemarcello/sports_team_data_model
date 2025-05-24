@@ -18,7 +18,7 @@ seeds:
         tests:
           - not_null
           - unique
-      - name: country-code
+      - name: country_code
         description: "The numeric country code."
         tests:
           - unique
