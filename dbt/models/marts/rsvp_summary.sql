@@ -1,3 +1,7 @@
+-- For each event, indicate how many members responded as accepted, 
+-- how many responded as declined, and how many did not respond at any given day.
+
+
 SELECT
     event_id,
     -- Convert BIGINT responded_at (seconds) to TIMESTAMP, then extract DATE
