@@ -1,3 +1,5 @@
+-- How many events were hosted per region (Fylke for Norway, State for the U.S., etc.)?
+
 SELECT
     t.country_code, -- Get country code from the hosting team
     COUNT(e.event_id) AS events_hosted

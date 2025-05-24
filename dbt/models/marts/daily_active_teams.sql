@@ -23,5 +23,5 @@ SELECT
     COUNT(DISTINCT team_id) AS distinct_active_teams
 FROM team_event_activities
 WHERE activity_date IS NOT NULL
-GROUP BY 1
-ORDER BY 1
+GROUP BY event_date
+ORDER BY distinct_active_teams desc

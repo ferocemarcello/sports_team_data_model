@@ -1,6 +1,4 @@
--- models/marts/attendance_rate_30_days.sql
--- Calculates overall attendance rate for the data period (e.g., 2024)
--- and expresses it as a percentage (0-100 scale).
+-- Over the last 30 days, what’s the average percentage of “Accepted” RSVPs compared to total invites sent?
 
 WITH rsvps_in_data_range AS (
     SELECT
@@ -9,17 +7,17 @@ WITH rsvps_in_data_range AS (
     FROM
         {{ ref('stg_event_rsvps') }}
     WHERE
-        (TO_TIMESTAMP(responded_at))::DATE >= DATE '2024-01-01'
-        AND (TO_TIMESTAMP(responded_at))::DATE <= DATE '2024-12-31'
-        AND responded_at IS NOT NULL
+        responded_at IS NOT NULL AND
+        responded_at >= (EXTRACT(EPOCH FROM CURRENT_DATE)::BIGINT - 2592000) -- 30 days in seconds
+        AND responded_at < EXTRACT(EPOCH FROM (CURRENT_DATE + INTERVAL '1 day'))::BIGINT -- Taking the whole current date
 )
 SELECT
-    ROUND( -- Round the final percentage value
+    ROUND(
         (
             CAST(SUM(CASE WHEN rsvp_status = 1 THEN 1 ELSE 0 END) AS DECIMAL) /
             NULLIF(COUNT(*), 0)
-        ) * 100, -- Multiply by 100 to convert to percentage
-        2 -- Round to 2 decimal places (e.g., 48.37)
-    ) AS overall_attendance_rate_percentage -- Renamed column to reflect percentage
+        ) * 100,
+        2
+    ) AS overall_attendance_rate_percentage_last_30_days
 FROM
-    rsvps_in_data_range
+    rsvps_in_data_range;

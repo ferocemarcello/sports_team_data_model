@@ -1,7 +1,7 @@
 SELECT
     event_id,
     -- Convert BIGINT responded_at (seconds) to TIMESTAMP, then extract DATE
-    (TO_TIMESTAMP(responded_at))::DATE AS rsvp_date, -- REMOVED / 1000
+    (TO_TIMESTAMP(responded_at))::DATE AS rsvp_date,
     SUM(CASE WHEN rsvp_status = 1 THEN 1 ELSE 0 END) AS accepted_rsvps,
     SUM(CASE WHEN rsvp_status = 2 THEN 1 ELSE 0 END) AS declined_rsvps,
     SUM(CASE WHEN rsvp_status = 0 THEN 1 ELSE 0 END) AS no_response_rsvps
