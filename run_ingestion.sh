@@ -101,12 +101,10 @@ echo "--- Verification ---"
 echo "You can connect to the database to verify data:"
 echo "psql -h localhost -p 5432 -U postgres -d spond_analytics"
 echo "Then run queries like: "
-echo "SELECT COUNT(*) FROM teams;"
-echo "SELECT COUNT(*) FROM memberships;"
-echo "SELECT COUNT(*) FROM events;"
-echo "SELECT COUNT(*) FROM event_rsvps;"
-echo "SELECT COUNT(*) FROM country_codes;" # New seed table
-echo "SELECT * FROM events_with_rsvps LIMIT 5;"
+echo "SELECT COUNT(*) FROM stg_teams;"
+echo "SELECT COUNT(*) FROM stg_memberships;"
+echo "SELECT COUNT(*) FROM stg_events;"
+echo "SELECT COUNT(*) FROM stg_event_rsvps;"
 
 # Optional: Keep services running for inspection, or add docker-compose down here to clean up
 # docker-compose down
