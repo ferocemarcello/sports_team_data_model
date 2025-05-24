@@ -7,7 +7,7 @@ SELECT
     CASE WHEN events.event_end ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN events.event_end::TIMESTAMPTZ ELSE NULL END AS event_end,
     CASE WHEN events.latitude ~ '^-?\d+(\.\d+)?$' THEN events.latitude::NUMERIC ELSE NULL END AS latitude,
     CASE WHEN events.longitude ~ '^-?\d+(\.\d+)?$' THEN events.longitude::NUMERIC ELSE NULL END AS longitude,
-    CASE WHEN events.created_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN events.created_at::TIMESTAMPTZ ELSE NULL END AS created_at,
+    CASE WHEN events.created_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN events.created_at::TIMESTAMPTZ ELSE NULL END AS created_at
 FROM
     {{ ref('events') }} AS events
 WHERE
@@ -19,4 +19,4 @@ WHERE
     (CASE WHEN events.latitude ~ '^-?\d+(\.\d+)?$' THEN events.latitude::NUMERIC ELSE NULL END) IS NOT NULL AND
     (CASE WHEN events.longitude ~ '^-?\d+(\.\d+)?$' THEN events.longitude::NUMERIC ELSE NULL END) IS NOT NULL AND
     (CASE WHEN events.event_end ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN events.event_end::TIMESTAMPTZ ELSE NULL END) IS NOT NULL AND
-    (CASE WHEN events.created_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN events.created_at::TIMESTAMPTZ ELSE NULL END) IS NOT NULL AND
+    (CASE WHEN events.created_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN events.created_at::TIMESTAMPTZ ELSE NULL END) IS NOT NULL
