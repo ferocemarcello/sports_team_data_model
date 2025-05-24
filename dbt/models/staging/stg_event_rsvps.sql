@@ -1,4 +1,3 @@
--- dbt/models/staging/stg_event_rsvps.sql
 SELECT
     -- Cast IDs to INT, filtering out non-numeric values
     CASE WHEN event_rsvps.event_rsvp_id ~ '^[0-9]+$' THEN event_rsvps.event_rsvp_id::INT ELSE NULL END AS event_rsvp_id,

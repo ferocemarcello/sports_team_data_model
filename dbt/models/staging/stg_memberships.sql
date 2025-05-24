@@ -6,7 +6,7 @@ SELECT
     CASE WHEN memberships.user_id ~ '^[0-9]+$' THEN memberships.user_id::INT ELSE NULL END AS user_id,
     memberships.role_title,
     -- Safely cast created_at to TIMESTAMPTZ
-    CASE WHEN memberships.created_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN memberships.created_at::TIMESTAMPTZ ELSE NULL END AS created_at
+    CASE WHEN memberships.joined_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN memberships.joined_at::TIMESTAMPTZ ELSE NULL END AS joined_at
 FROM
     {{ ref('memberships') }} AS memberships
 WHERE
@@ -15,4 +15,4 @@ WHERE
     (CASE WHEN memberships.team_id ~ '^[0-9]+$' THEN memberships.team_id::INT ELSE NULL END) IS NOT NULL AND
     (CASE WHEN memberships.user_id ~ '^[0-9]+$' THEN memberships.user_id::INT ELSE NULL END) IS NOT NULL AND
     memberships.role_title IS NOT NULL AND
-    (CASE WHEN memberships.created_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN memberships.created_at::TIMESTAMPTZ ELSE NULL END) IS NOT NULL
+    (CASE WHEN memberships.joined_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN memberships.joined_at::TIMESTAMPTZ ELSE NULL END) IS NOT NULL
