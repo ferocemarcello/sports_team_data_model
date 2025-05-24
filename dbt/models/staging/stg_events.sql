@@ -7,7 +7,7 @@ SELECT
     TRY_CAST(latitude AS NUMERIC) AS latitude,
     TRY_CAST(longitude AS NUMERIC) AS longitude
 FROM
-    {{ ref('events') }} -- <--- CHANGED FROM {{ source('public', 'raw_events') }}
+    {{ ref('events') }}
 WHERE
     -- Filter out rows with invalid types
     TRY_CAST(event_id AS INT) IS NOT NULL AND

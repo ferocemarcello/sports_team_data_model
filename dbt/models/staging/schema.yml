@@ -1,5 +1,5 @@
 models:
-  - name: event_rsvps
+  - name: stg_event_rsvps
     description: Staging model for event RSVPs
     columns:
       - name: event_rsvp_id
@@ -23,7 +23,7 @@ models:
               values: ['0', '1', '2']
       - name: responded_at
         description: Timestamp of when the RSVP was responded.
-  - name: teams
+  - name: stg_teams
     description: Staging model for teams data, filtered for valid types and country codes.
     columns:
       - name: team_id

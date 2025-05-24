@@ -4,9 +4,9 @@ SELECT
     event_rsvps.event_id,
     event_rsvps.membership_id,
     event_rsvps.rsvp_status,
-    TRY_CAST(event_rsvps.responded_at AS TIMESTAMPTZ) AS rsvp_time -- Cast to TIMESTAMPTZ
+    TRY_CAST(event_rsvps.responded_at AS TIMESTAMPTZ) AS responded_at -- Cast to TIMESTAMPTZ
 FROM
-    {{ ref('event_rsvps') }} AS event_rsvps -- <--- CHANGED FROM {{ source('public', 'raw_event_rsvps') }}
+    {{ ref('event_rsvps') }} AS event_rsvps
 INNER JOIN {{ ref('events') }} AS events -- Join to ensure event_id exists in events (now a seed)
     ON event_rsvps.event_id = events.event_id
 INNER JOIN {{ ref('memberships') }} AS memberships -- Join to ensure membership_id exists in memberships (now a seed)
