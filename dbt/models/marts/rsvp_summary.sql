@@ -1,7 +1,7 @@
 SELECT
     event_id,
-    -- Using responded_at as the date for grouping responses
-    DATE(responded_at) AS rsvp_date,
+    -- Convert BIGINT responded_at (milliseconds) to TIMESTAMP, then extract DATE
+    (TO_TIMESTAMP(responded_at / 1000))::DATE AS rsvp_date,
     SUM(CASE WHEN rsvp_status = 'accepted' THEN 1 ELSE 0 END) AS accepted_rsvps,
     SUM(CASE WHEN rsvp_status = 'declined' THEN 1 ELSE 0 END) AS declined_rsvps,
     -- Count records where status is NULL or not 'accepted'/'declined' as no response.
@@ -16,4 +16,4 @@ GROUP BY
     rsvp_date
 ORDER BY
     event_id,
-    rsvp_date;
+    rsvp_date

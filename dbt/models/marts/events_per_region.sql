@@ -11,4 +11,4 @@ WHERE
 GROUP BY
     t.country_code
 ORDER BY
-    t.country_code;
+    t.country_code
