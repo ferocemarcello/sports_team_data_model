@@ -1,12 +1,11 @@
+-- models/marts/daily_active_teams.sql (or wherever this view is defined)
+
 SELECT
-    -- Convert BIGINT created_at (milliseconds) to TIMESTAMP, then extract DATE
-    (TO_TIMESTAMP(e.created_at / 1000))::DATE AS event_date,
-    COUNT(DISTINCT e.team_id) AS distinct_active_teams
-FROM
-    {{ ref('stg_events') }} AS e
-WHERE
-    e.created_at IS NOT NULL
-GROUP BY
-    1
-ORDER BY
-    1
+    (TO_TIMESTAMP(se.event_start / 1000))::DATE AS event_date, -- <-- Fix is here
+    COUNT(DISTINCT sm.team_id) AS distinct_active_teams
+FROM {{ ref('stg_events') }} se
+JOIN {{ ref('stg_memberships') }} sm -- Assuming you join to get team_id
+  ON se.host_member_id = sm.member_id -- Or whatever your join condition is
+WHERE se.event_start IS NOT NULL -- Exclude null timestamps
+GROUP BY 1
+ORDER BY 1;
