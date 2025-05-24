@@ -7,7 +7,7 @@ SELECT
     EXTRACT(EPOCH FROM events.event_end)::BIGINT AS event_end,
     CASE WHEN events.latitude ~ '^-?\d+(\.\d+)?$' THEN events.latitude::NUMERIC ELSE NULL END AS latitude,
     CASE WHEN events.longitude ~ '^-?\d+(\.\d+)?$' THEN events.longitude::NUMERIC ELSE NULL END AS longitude,
-    EXTRACT(EPOCH FROM events.created_at)::BIGINT AS created_at,
+    EXTRACT(EPOCH FROM events.created_at)::BIGINT AS created_at
 FROM
     {{ ref('events') }} AS events
 WHERE
