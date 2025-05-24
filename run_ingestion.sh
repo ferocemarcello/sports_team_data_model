@@ -13,7 +13,7 @@ docker-compose down -v
 
 # 2. Start the PostgreSQL database service immediately
 echo "Starting PostgreSQL database service..."
-docker-compose up -d --build db
+docker-compose up -d --build db --remove-orphans
 if [ $? -ne 0 ]; then
   echo "Failed to start database service."
   exit 1
