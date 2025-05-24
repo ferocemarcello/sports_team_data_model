@@ -1,4 +1,3 @@
--- dbt/models/staging/stg_events.sql
 SELECT
     events.event_id AS event_id,
     events.team_id AS team_id,
@@ -11,4 +10,4 @@ FROM
     {{ ref('events') }} AS events
 WHERE
     events.event_id IS NOT NULL AND
-    events.team_id IS NOT NULL AND
+    events.team_id IS NOT NULL
