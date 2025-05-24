@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: daily_active_teams
+    description: "Counts distinct teams that hosted or updated events each day."
+    columns:
+      - name: event_date
+        description: "Date of event activity."
+        data_type: date
+      - name: distinct_active_teams
+        description: "Number of distinct teams active on this date."
+        data_type: bigint
+
+  - name: rsvp_summary
+    description: "Summary of RSVPs (accepted, declined, no response) for each event on a given date."
+    columns:
+      - name: event_id
+        description: "Unique identifier for the event."
+        data_type: varchar # Adjust data type based on your actual column type
+      - name: rsvp_date
+        description: "Date the RSVP was responded or recorded."
+        data_type: date
+      - name: accepted_rsvps
+        description: "Count of 'accepted' RSVPs."
+        data_type: bigint
+      - name: declined_rsvps
+        description: "Count of 'declined' RSVPs."
+        data_type: bigint
+      - name: no_response_rsvps
+        description: "Count of RSVPs with no explicit 'accepted' or 'declined' status."
+        data_type: bigint
+
+  - name: attendance_rate_30_days
+    description: "Calculates the overall average attendance rate (accepted RSVPs / total invites) over the last 30 days."
+    columns:
+      - name: overall_attendance_rate_30_days
+        description: "Average percentage of accepted RSVPs."
+        data_type: numeric # Or float/decimal
+
+  - name: new_vs_returning_members
+    description: "Tracks new and returning event participants per week based on their event participation history."
+    columns:
+      - name: week_start_date
+        description: "Start date of the week (e.g., Monday)."
+        data_type: date
+      - name: new_event_participants_this_week
+        description: "Count of members whose first ever event participation was in this week."
+        data_type: bigint
+      - name: returning_event_participants_this_week
+        description: "Count of members active in an event this week, who had their first ever event participation before this week."
+        data_type: bigint
+
+  - name: events_per_region
+    description: "Counts events hosted per country, based on the hosting team's country code."
+    columns:
+      - name: country_code
+        description: "ISO 3166-1 alpha-2 country code of the hosting team."
+        data_type: varchar # Adjust data type based on your actual column type (e.g., CHAR(2))
+      - name: events_hosted
+        description: "Number of events hosted in this country."
+        data_type: bigint
