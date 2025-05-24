@@ -16,4 +16,4 @@ SELECT
     CAST(SUM(CASE WHEN rsvp_status = 'accepted' THEN 1 ELSE 0 END) AS DECIMAL) /
     NULLIF(COUNT(*), 0) AS overall_attendance_rate_30_days
 FROM
-    recent_rsvps;
+    recent_rsvps
