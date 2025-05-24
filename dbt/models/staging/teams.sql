@@ -1,3 +1,4 @@
+-- dbt/models/staging/teams.sql
 SELECT
     -- Safely cast team_id to INT. If it doesn't consist solely of digits, it becomes NULL.
     CASE
@@ -7,17 +8,15 @@ SELECT
     teams.team_activity,
     teams.country_code,
     -- Safely cast created_at to TIMESTAMPTZ. If the format doesn't match, it becomes NULL.
-    -- This regex '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' checks for the exact ISO 8601 format:
-    -- YYYY-MM-DDTHH:MM:SS.sssZ (milliseconds optional)
     CASE
         WHEN teams.created_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN teams.created_at::TIMESTAMPTZ
         ELSE NULL
     END AS created_at
 FROM
-    {{ source('public', 'raw_teams') }} AS teams
+    {{ ref('teams') }} AS teams
 INNER JOIN {{ ref('country_codes') }} AS valid_country_codes
     -- IMPORTANT: Use double quotes for 'alpha-3' because of the hyphen in the column name from your CSV
-    ON teams.country_code = valid_country_codes.alpha_three
+    ON teams.country_code = valid_country_codes."alpha-3"
 WHERE
     -- Filter out rows where team_id was not a valid INT (i.e., became NULL after the CASE statement)
     (CASE WHEN teams.team_id ~ '^[0-9]+$' THEN teams.team_id::INT ELSE NULL END) IS NOT NULL

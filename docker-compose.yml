@@ -18,29 +18,6 @@ services:
       timeout: 5s
       retries: 5
 
-  ingester:
-    build:
-      # Change the context to the 'ingestion' directory
-      context: ./ingestion # <--- CHANGE THIS LINE
-      dockerfile: Dockerfile # <--- CHANGE THIS LINE (no longer needs ./ingestion/)
-    container_name: spond-ingester
-    depends_on:
-      db:
-        condition: service_healthy # Ensure DB is ready before ingester starts
-    environment:
-      DB_HOST: db # Hostname for services within Docker network
-      DB_PORT: 5432
-      DB_NAME: spond_analytics
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-    volumes:
-      # Update these paths to point to the new 'data' directory
-      - ./data/teams.csv:/app/teams.csv:ro
-      - ./data/memberships.csv:/app/memberships.csv:ro
-      - ./data/events.csv:/app/events.csv:ro
-      - ./data/event_rsvps.csv:/app/event_rsvps.csv:ro
-    command: python ingest_data.py
-
   dbt-cli:
     build:
       context: ./dbt

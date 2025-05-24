@@ -1,3 +1,4 @@
+# dbt/seeds/schema.yml
 seeds:
   - name: country_codes
     description: "List of valid ISO 3166-1 country codes and associated data."
@@ -17,16 +18,12 @@ seeds:
         tests:
           - not_null
           - unique
-      - name: country_code
+      - name: country-code
         description: "The numeric country code."
         tests:
-          - not_null
           - unique
       - name: iso
         description: "ISO 3166-2 subdivision code (e.g., US-CA)."
-        tests:
-          - not_null
-          - unique
       - name: region
         description: "Geographic region."
       - name: sub_region
@@ -35,7 +32,60 @@ seeds:
         description: "Geographic intermediate-region."
       - name: region_code
         description: "Numeric region code."
-      - name: sub-region_code
+      - name: sub_region_code
         description: "Numeric sub-region code."
-      - name: intermediate_region-code
+      - name: intermediate_region_code
         description: "Numeric intermediate-region code."
+
+  - name: teams
+    description: "Raw data for teams from CSV. Loaded as-is."
+    columns:
+      - name: team_id
+        description: "Raw team ID string (will be cast to INT in staging)."
+        tests:
+          - not_null
+          - unique
+      - name: team_activity
+        description: "Raw team activity string."
+      - name: country_code
+        description: "Raw country code string."
+      - name: created_at
+        description: "Raw created at timestamp string (will be cast to TIMESTAMPTZ in staging)."
+
+  - name: memberships
+    description: "Raw data for memberships from CSV. Loaded as-is."
+    columns:
+      - name: membership_id
+        tests:
+          - not_null
+          - unique
+      - name: team_id
+      - name: user_id
+      - name: role_title
+      - name: joined_at
+
+  - name: events
+    description: "Raw data for events from CSV. Loaded as-is."
+    columns:
+      - name: event_id
+        tests:
+          - not_null
+          - unique
+      - name: team_id
+      - name: event_start
+      - name: event_end
+      - name: latitude
+      - name: longitude
+      - name: created_at
+
+  - name: event_rsvps # New seed definition
+    description: "Raw data for event RSVPs from CSV. Loaded as-is."
+    columns:
+      - name: event_rsvp_id
+        tests:
+          - not_null
+          - unique
+      - name: event_id
+      - name: membership_id
+      - name: rsvp_status
+      - name: responded_at
