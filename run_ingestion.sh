@@ -6,8 +6,7 @@ TERRAFORM_DIR="./terraform"
 echo "--- Setting up PostgreSQL with Docker Compose and Terraform ---"
 
 # 1. Stop and remove existing Docker Compose services and volumes for a clean start
-echo "Stopping and removing existing Docker Compose services and volumes (if any)..."
-docker rm -f spond-postgres 2>/dev/null || true # Ensure container is gone
+echo "Stopping and removing existing Docker Compose services and volumes"
 docker-compose down -v
 
 # 2. Start ONLY the PostgreSQL database service in detached mode
@@ -101,6 +100,3 @@ echo "SELECT COUNT(*) FROM public.stg_teams;"
 echo "SELECT COUNT(*) FROM public.stg_memberships;"
 echo "SELECT COUNT(*) FROM public.stg_events;"
 echo "SELECT COUNT(*) FROM public.stg_event_rsvps;"
-
-# Optional: Keep services running for inspection, or add docker-compose down here to clean up
-# docker-compose down
