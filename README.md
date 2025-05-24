@@ -59,7 +59,7 @@ To fix this:
 
 ### 2. Execution
 
-Follow these steps from your terminal, in the root directory of your `spond_project`:
+Follow these steps from the terminal, in the root directory of `spond_project`:
 
 * **Make the shell script executable:**
     ```bash
@@ -85,3 +85,49 @@ To stop and remove all the running services and files, you can run the following
 
 ```bash
 docker-compose down -v
+
+### 4. Running Specific dbt Stages (Optional)
+
+The `./run_ingestion.sh` script executes the full dbt `build` command, which includes running all models and all tests. However, you might want to run only specific parts of the dbt pipeline for development or debugging.
+
+To do this, you can execute dbt commands directly within the `dbt-cli` Docker service. Ensure PostgreSQL container is running before attempting these commands (you can start it with `./run_ingestion.sh` and then `Ctrl+C` after the database is up, or manually with `docker-compose up -d postgres`).
+
+Here are some common scenarios:
+
+* **Run only Staging models:**
+    This will execute all models located in `models/staging` directory.
+    ```bash
+    docker-compose run --rm dbt-cli dbt run --select path:models/staging
+    ```
+
+* **Run only Marts models:**
+    This will execute all models located in `models/marts` directory. This command will likely fail if the necessary staging models (on which marts models depend) have not been run previously.
+    ```bash
+    docker-compose run --rm dbt-cli dbt run --select path:models/marts
+    ```
+
+* **Run only a specific model (e.g., `daily_active_teams`):**
+    ```bash
+    docker-compose run --rm dbt-cli dbt run --select daily_active_teams
+    ```
+
+* **Run all Tests:**
+    This will execute all tests defined in `tests` directory.
+    ```bash
+    docker-compose run --rm dbt-cli dbt test
+    ```
+
+* **Run Tests for a specific model (e.g., `attendance_rate_30_days`):**
+    ```bash
+    docker-compose run --rm dbt-cli dbt test --select attendance_rate_30_days
+    ```
+
+* **Run only Staging models and their associated tests:**
+    ```bash
+    docker-compose run --rm dbt-cli dbt build --select path:models/staging
+    ```
+
+* **Run only Marts models and their associated tests:**
+    ```bash
+    docker-compose run --rm dbt-cli dbt build --select path:models/marts
+    ```
