@@ -57,27 +57,15 @@ To fix this:
     ```
     If you see a "Hello from Docker!" message, you're good to go.
 
-### 2. Project Structure
-
-Ensure your project directory is organized as described in the "Project Structure" section above. Specifically, place your sample CSV files (`teams.csv`, `members.csv`, `events.csv`, `event_rsvps.csv`) AND the new `schema.sql` file inside the `data/` subdirectory.
-
-### 3. Execution
+### 2. Execution
 
 Follow these steps from your terminal, in the root directory of your `spond_project`:
-
-* **Initialize Terraform (Crucial after any `main.tf` or provider changes):**
-    First, navigate to the `terraform` directory and run `terraform init`. This will download the correct provider and set up the backend.
-    ```bash
-    cd terraform
-    terraform init
-    cd .. # Go back to the project root
-    ```
 
 * **Make the shell script executable:**
     ```bash
     chmod +x run_ingestion.sh
     ```
-
+    
 * **Run the ingestion script:**
     ```bash
     ./run_ingestion.sh
@@ -91,25 +79,7 @@ This script will perform the following actions:
 4.  **Run Ingestion Container:** The `spond-data-ingester` container will be run. It will connect to the local PostgreSQL database and ingest the data from the CSV files located in the `data` directory.
 5.  **Completion Message:** You will see messages indicating the progress and completion of the data ingestion process.
 
-### 4. Verification (Optional)
-
-After the script finishes, you can optionally connect to the PostgreSQL database to verify that the data has been successfully loaded:
-
-* **Connect to PostgreSQL using `psql`:**
-    ```bash
-    psql -h localhost -p 5432 -U postgres -d spond_analytics
-    ```
-    (You might be prompted for the password, which is `postgres` as configured in the `run_ingestion.sh` script).
-
-* **Run sample queries to check data counts:**
-    ```sql
-    SELECT COUNT(*) FROM teams;
-    SELECT COUNT(*) FROM members;
-    SELECT COUNT(*) FROM events;
-    SELECT COUNT(*) FROM event_rsvps;
-    ```
-
-### 5. Cleanup (Optional)
+### 3. Cleanup (Optional)
 
 To stop and remove the PostgreSQL container after you are done with verification, you can run the following commands:
 
