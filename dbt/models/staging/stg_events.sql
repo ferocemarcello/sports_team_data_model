@@ -1,8 +1,7 @@
 -- dbt/models/staging/stg_events.sql
 SELECT
-    -- Cast IDs to INT, filtering out non-numeric values
-    CASE WHEN events.event_id ~ '^[0-9]+$' THEN events.event_id::INT ELSE NULL END AS event_id,
-    CASE WHEN events.team_id ~ '^[0-9]+$' THEN events.team_id::INT ELSE NULL END AS team_id,
+    events.event_id AS event_id
+    events.team_id AS team_id,
     EXTRACT(EPOCH FROM events.event_start)::BIGINT AS event_start,
     EXTRACT(EPOCH FROM events.event_end)::BIGINT AS event_end,
     events.latitude,
@@ -11,11 +10,5 @@ SELECT
 FROM
     {{ ref('events') }} AS events
 WHERE
-    -- Filter out rows where IDs are not valid INTs
-    (CASE WHEN events.event_id ~ '^[0-9]+$' THEN events.event_id::INT ELSE NULL END) IS NOT NULL AND
-    (CASE WHEN events.team_id ~ '^[0-9]+$' THEN events.team_id::INT ELSE NULL END) IS NOT NULL AND
-    events.event_start IS NOT NULL AND
-    events.event_end IS NOT NULL AND
-    events.latitude IS NOT NULL AND
-    events.longitude IS NOT NULL AND
-    events.created_at IS NOT NULL
+    events.event_id IS NOT NULL AND
+    events.team_id IS NOT NULL AND
