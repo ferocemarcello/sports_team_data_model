@@ -7,9 +7,10 @@ SELECT
     END AS team_id,
     teams.team_activity,
     teams.country_code,
-    -- Safely cast created_at to TIMESTAMPTZ. If the format doesn't match, it becomes NULL.
+    -- Safely convert created_at to epoch seconds since 1970-01-01 00:00:00 UTC
     CASE
-        WHEN teams.created_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN teams.created_at::TIMESTAMPTZ
+        WHEN teams.created_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$'
+        THEN EXTRACT(EPOCH FROM (teams.created_at::TIMESTAMPTZ))::BIGINT -- <--- CHANGED
         ELSE NULL
     END AS created_at
 FROM

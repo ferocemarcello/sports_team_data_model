@@ -5,7 +5,10 @@ SELECT
     CASE WHEN event_rsvps.membership_id ~ '^[0-9]+$' THEN event_rsvps.membership_id::INT ELSE NULL END AS membership_id,
     event_rsvps.rsvp_status,
     -- Use CASE for robust type casting for responded_at
-    CASE WHEN event_rsvps.responded_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN event_rsvps.responded_at::TIMESTAMPTZ ELSE NULL END AS rsvp_time
+    CASE WHEN event_rsvps.responded_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$'
+    THEN EXTRACT(EPOCH FROM (event_rsvps.responded_at::TIMESTAMPTZ))::BIGINT -- <--- CHANGED
+    ELSE NULL
+    END AS responded_at
 FROM
     {{ ref('event_rsvps') }} AS event_rsvps
 INNER JOIN {{ ref('stg_events') }} AS events -- Join to the STAGING events model
