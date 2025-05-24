@@ -81,8 +81,7 @@ This script will perform the following actions:
 
 ### 3. Cleanup (Optional)
 
-To stop and remove the PostgreSQL container after you are done with verification, you can run the following commands:
+To stop and remove all the running services and files, you can run the following commands:
 
 ```bash
-docker stop spond-postgres
-docker rm spond-postgres
+docker-compose down -v
