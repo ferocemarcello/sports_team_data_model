@@ -25,9 +25,6 @@ The project utilizes three sample datasets in CSV format. The schema for these t
 
 ## Data Ingestion
 
-The aim of this section is to ingest the provided CSV data into a local PostgreSQL database. Key considerations for ingestion include:
-* **Timestamp Transformation:** All timestamps are converted to the number of seconds from 01/01/1970.
-* **Foreign Key Handling:** The `team_id` in the `members` table correctly references the `team_id` in the `teams` table, and similar relationships are maintained for `events` and `event_rsvps`.
 * **Database Setup:** PostgreSQL is set up using Terraform, ensuring a consistent and reproducible database schema.
 * **Containerization:** The entire ingestion process runs within a Docker container built on `python:3.12-slim-bookworm` for portability and isolation.
 
