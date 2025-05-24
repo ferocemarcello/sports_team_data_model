@@ -58,4 +58,4 @@ LEFT JOIN
 GROUP BY
     arw.week_start_date
 ORDER BY
-    arw.week_start_date;
+    arw.week_start_date
