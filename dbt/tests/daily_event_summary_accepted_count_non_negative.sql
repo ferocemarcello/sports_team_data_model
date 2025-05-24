@@ -4,5 +4,5 @@ SELECT
     event_id,
     event_date,
     total_accepted_attendees
-FROM {{ ref('daily_event_summary') }} -- Adjust 'daily_event_summary' to your actual view name
+FROM {{ ref('rsvp_summary') }}
 WHERE total_accepted_attendees < 0

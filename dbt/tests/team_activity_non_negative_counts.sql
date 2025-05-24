@@ -4,7 +4,7 @@ SELECT
     team_id,
     total_events_participated,
     total_members_attending
-FROM {{ ref('team_activity') }} -- Adjust 'team_activity' to your actual view name
+FROM {{ ref('daily_active_teams') }} -- Adjust 'team_activity' to your actual view name
 WHERE
     total_events_participated < 0
     OR total_members_attending < 0
