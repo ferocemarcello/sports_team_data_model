@@ -12,8 +12,6 @@ docker-compose down -v
 
 # 2. Start ONLY the PostgreSQL database service in detached mode
 echo "Starting PostgreSQL database service..."
-# Only 'db' needs to be continuously running for other services to connect to it.
-# 'terraform-cli' and 'dbt-cli' will be spun up by 'docker-compose run' as needed.
 docker-compose up -d --build --remove-orphans db
 if [ $? -ne 0 ]; then
   echo "Failed to start database service."
@@ -50,13 +48,15 @@ echo "Database 'spond_analytics' dropped (if it existed)."
 # 4. Initialize Terraform and apply configuration to create the application database using the container
 echo "Initializing Terraform..."
 rm -f "$TERRAFORM_DIR"/terraform.tfstate* # Clean up existing state on host
-docker-compose run --rm terraform-cli terraform init
+# Use the absolute path to terraform, which is now /usr/local/bin/terraform
+docker-compose run --rm terraform-cli /usr/local/bin/terraform init # <--- UPDATED PATH
 if [ $? -ne 0 ]; then
   echo "Terraform initialization failed."
   exit 1
 fi
 echo "Applying Terraform configuration to create database..."
-docker-compose run --rm terraform-cli terraform apply -auto-approve -target=postgresql_database.spond_analytics
+# Use the absolute path to terraform
+docker-compose run --rm terraform-cli /usr/local/bin/terraform apply -auto-approve -target=postgresql_database.spond_analytics # <--- UPDATED PATH
 if [ $? -ne 0 ]; then
   echo "Terraform apply failed."
   exit 1

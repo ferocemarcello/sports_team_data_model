@@ -1,6 +1,19 @@
-# Use an official HashiCorp Terraform image as the base
-FROM hashicorp/terraform:latest
+# Use a lightweight base image, like alpine/git which often has curl and unzip
+FROM alpine/git:latest
 
-# Set the working directory inside the container
-# This should match the directory where your terraform files are mounted
+# Define the Terraform version you want to install
+ARG TERRAFORM_VERSION="1.8.0" # You can choose a different stable version if you prefer
+
+# Install necessary tools (curl for download, unzip for extraction)
+RUN apk add --no-cache curl unzip \
+    # Download the Terraform binary for Linux AMD64
+    && curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" \
+    # Unzip the binary into /usr/local/bin (which is commonly in the PATH)
+    && unzip "terraform_${TERRAFORM_VERSION}_linux_amd64.zip" -d /usr/local/bin \
+    # Clean up the downloaded zip file
+    && rm "terraform_${TERRAFORM_VERSION}_linux_amd64.zip" \
+    # Make the terraform binary executable
+    && chmod +x /usr/local/bin/terraform
+
+# Set the working directory inside the container to your terraform folder
 WORKDIR /usr/src/app/terraform
