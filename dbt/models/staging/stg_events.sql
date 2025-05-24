@@ -18,5 +18,4 @@ WHERE
     events.event_end IS NOT NULL AND
     events.latitude IS NOT NULL AND
     events.longitude IS NOT NULL AND
-    (CASE WHEN events.event_end ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN events.event_end::TIMESTAMPTZ ELSE NULL END) IS NOT NULL AND
     events.created_at IS NOT NULL
