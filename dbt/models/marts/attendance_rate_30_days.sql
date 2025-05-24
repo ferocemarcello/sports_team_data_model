@@ -20,4 +20,4 @@ SELECT
         2
     ) AS overall_attendance_rate_percentage_last_30_days
 FROM
-    rsvps_in_data_range;
+    rsvps_in_data_range
