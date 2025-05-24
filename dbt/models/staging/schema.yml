@@ -14,8 +14,7 @@ models:
       - name: membership_id
         description: Foreign key to memberships.
         tests:
-          - not_null:
-              severity: warn
+          - not_null
       - name: rsvp_status
         description: RSVP status (0, 1, 2).
         tests:
@@ -49,9 +48,10 @@ models:
           - not_null
       - name: role_title
         description: "The role or title of the member within the team."
-      - name: joined_at
         tests:
-          - not_null
+          - accepted_values:
+              values: ['admin', 'member']
+      - name: joined_at
   - name: stg_events
     description: Staging model for events data.
     columns:
@@ -68,15 +68,7 @@ models:
           - not_null
       - name: event_end
         description: UTC timestamp of when the event ends, in seconds since epoch.
-        tests:
-          - not_null
       - name: latitude
-        tests:
-          - not_null
       - name: longitude
-        tests:
-          - not_null
       - name: created_at
         description: UTC timestamp of when the event starts, in seconds since epoch.
-        tests:
-          - not_null

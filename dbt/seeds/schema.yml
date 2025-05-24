@@ -71,7 +71,7 @@ seeds:
       - name: longitude
       - name: created_at
 
-  - name: event_rsvps # New seed definition
+  - name: event_rsvps
     description: "Raw data for event RSVPs from CSV. Loaded as-is."
     columns:
       - name: event_rsvp_id
