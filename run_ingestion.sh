@@ -2,7 +2,6 @@
 
 # Define directories
 TERRAFORM_DIR="./terraform"
-DBT_DIR="./dbt" # Not strictly needed if using working_dir in docker-compose
 
 echo "--- Setting up PostgreSQL with Docker Compose and Terraform ---"
 
@@ -11,13 +10,13 @@ echo "Stopping and removing existing Docker Compose services and volumes (if any
 docker rm -f spond-postgres 2>/dev/null || true # Ensure container is gone
 docker-compose down -v
 
-# 2. Start the PostgreSQL database service immediately
+# 2. Start ONLY the PostgreSQL database service in detached mode
 echo "Starting PostgreSQL database service..."
-# We start 'db' and 'terraform-cli' and 'dbt-cli' all at once, 
-# relying on 'depends_on' and 'service_healthy' for orchestration.
-docker-compose up -d --build --remove-orphans db terraform-cli dbt-cli
+# Only 'db' needs to be continuously running for other services to connect to it.
+# 'terraform-cli' and 'dbt-cli' will be spun up by 'docker-compose run' as needed.
+docker-compose up -d --build --remove-orphans db
 if [ $? -ne 0 ]; then
-  echo "Failed to start Docker Compose services."
+  echo "Failed to start database service."
   exit 1
 fi
 
@@ -39,7 +38,6 @@ for i in $(seq 1 $MAX_RETRIES); do
 done
 
 # 3. Explicitly drop the application database if it exists, to ensure a clean slate for Terraform
-# This still uses 'docker exec' directly to the DB container, which is fine and lightweight.
 echo "Ensuring clean database state: Dropping 'spond_analytics' if it exists..."
 docker exec -i spond-postgres psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS spond_analytics WITH (FORCE);"
 if [ $? -ne 0 ]; then
@@ -52,14 +50,12 @@ echo "Database 'spond_analytics' dropped (if it existed)."
 # 4. Initialize Terraform and apply configuration to create the application database using the container
 echo "Initializing Terraform..."
 rm -f "$TERRAFORM_DIR"/terraform.tfstate* # Clean up existing state on host
-# Execute terraform init within the container
 docker-compose run --rm terraform-cli terraform init
 if [ $? -ne 0 ]; then
   echo "Terraform initialization failed."
   exit 1
 fi
 echo "Applying Terraform configuration to create database..."
-# Execute terraform apply within the container
 docker-compose run --rm terraform-cli terraform apply -auto-approve -target=postgresql_database.spond_analytics
 if [ $? -ne 0 ]; then
   echo "Terraform apply failed."
