@@ -6,7 +6,7 @@ SELECT
     total_rsvps_made,
     total_accepted_rsvps,
     total_declined_rsvps
-FROM {{ ref('member_event_activity') }} -- Adjust 'member_event_activity' to your actual view name
+FROM {{ ref('rsvp_summary') }} -- Adjust 'member_event_activity' to your actual view name
 WHERE
     total_rsvps_made < 0
     OR total_accepted_rsvps < 0

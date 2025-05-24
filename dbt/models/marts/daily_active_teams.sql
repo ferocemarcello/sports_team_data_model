@@ -5,7 +5,7 @@ SELECT
     COUNT(DISTINCT sm.team_id) AS distinct_active_teams
 FROM {{ ref('stg_events') }} se
 JOIN {{ ref('stg_memberships') }} sm -- Assuming you join to get team_id
-  ON se.host_member_id = sm.member_id -- Or whatever your join condition is
+  ON se.host_member_id = sm.membership_id -- Or whatever your join condition is
 WHERE se.event_start IS NOT NULL -- Exclude null timestamps
 GROUP BY 1
 ORDER BY 1;
