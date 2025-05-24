@@ -2,7 +2,7 @@
 
 # Define directories
 TERRAFORM_DIR="./terraform"
-DBT_DIR="./dbt"
+DBT_DIR="./dbt" # Not strictly needed if using working_dir in docker-compose
 
 echo "--- Setting up PostgreSQL with Docker Compose and Terraform ---"
 
@@ -13,9 +13,11 @@ docker-compose down -v
 
 # 2. Start the PostgreSQL database service immediately
 echo "Starting PostgreSQL database service..."
-docker-compose up -d --build --remove-orphans db
+# We start 'db' and 'terraform-cli' and 'dbt-cli' all at once, 
+# relying on 'depends_on' and 'service_healthy' for orchestration.
+docker-compose up -d --build --remove-orphans db terraform-cli dbt-cli
 if [ $? -ne 0 ]; then
-  echo "Failed to start database service."
+  echo "Failed to start Docker Compose services."
   exit 1
 fi
 
@@ -37,6 +39,7 @@ for i in $(seq 1 $MAX_RETRIES); do
 done
 
 # 3. Explicitly drop the application database if it exists, to ensure a clean slate for Terraform
+# This still uses 'docker exec' directly to the DB container, which is fine and lightweight.
 echo "Ensuring clean database state: Dropping 'spond_analytics' if it exists..."
 docker exec -i spond-postgres psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS spond_analytics WITH (FORCE);"
 if [ $? -ne 0 ]; then
@@ -46,26 +49,22 @@ fi
 echo "Database 'spond_analytics' dropped (if it existed)."
 
 
-# 4. Initialize Terraform and apply configuration to create the application database
+# 4. Initialize Terraform and apply configuration to create the application database using the container
 echo "Initializing Terraform..."
-rm -f "$TERRAFORM_DIR"/terraform.tfstate*
-cd "$TERRAFORM_DIR" || { echo "Error: Missing terraform directory."; exit 1; }
-terraform init
+rm -f "$TERRAFORM_DIR"/terraform.tfstate* # Clean up existing state on host
+# Execute terraform init within the container
+docker-compose run --rm terraform-cli terraform init
 if [ $? -ne 0 ]; then
   echo "Terraform initialization failed."
   exit 1
 fi
 echo "Applying Terraform configuration to create database..."
-terraform apply -auto-approve -target=postgresql_database.spond_analytics
+# Execute terraform apply within the container
+docker-compose run --rm terraform-cli terraform apply -auto-approve -target=postgresql_database.spond_analytics
 if [ $? -ne 0 ]; then
   echo "Terraform apply failed."
   exit 1
 fi
-cd - > /dev/null
-
-# --- REMOVED INGESTER SERVICE STARTUP AND VERIFICATION ---
-# The ingester service is now removed from docker-compose.yml
-# and its function is replaced by dbt seed.
 
 echo "--- Proceeding with dbt actions ---"
 
@@ -101,10 +100,10 @@ echo "--- Verification ---"
 echo "You can connect to the database to verify data:"
 echo "psql -h localhost -p 5432 -U postgres -d spond_analytics"
 echo "Then run queries like: "
-echo "SELECT COUNT(*) FROM stg_teams;"
-echo "SELECT COUNT(*) FROM stg_memberships;"
-echo "SELECT COUNT(*) FROM stg_events;"
-echo "SELECT COUNT(*) FROM stg_event_rsvps;"
+echo "SELECT COUNT(*) FROM public.stg_teams;"
+echo "SELECT COUNT(*) FROM public.stg_memberships;"
+echo "SELECT COUNT(*) FROM public.stg_events;"
+echo "SELECT COUNT(*) FROM public.stg_event_rsvps;"
 
 # Optional: Keep services running for inspection, or add docker-compose down here to clean up
 # docker-compose down

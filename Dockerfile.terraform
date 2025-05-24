@@ -1,0 +1,6 @@
+# Use an official HashiCorp Terraform image as the base
+FROM hashicorp/terraform:latest
+
+# Set the working directory inside the container
+# This should match the directory where your terraform files are mounted
+WORKDIR /usr/src/app/terraform

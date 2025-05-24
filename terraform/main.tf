@@ -8,11 +8,11 @@ terraform {
 }
 
 provider "postgresql" {
-  host            = "localhost"
-  port            = 5432
-  username        = "postgres"
-  password        = "postgres"
-  database        = "postgres" # Important: connect to 'postgres' to create 'spond_analytics'
+  host            = var.PG_HOST
+  port            = var.PG_PORT
+  username        = var.PG_USER
+  password        = var.PG_PASSWORD
+  database        = var.PG_DBNAME
   sslmode         = "disable"
 }
 

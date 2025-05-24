@@ -40,6 +40,26 @@ services:
     # REMOVE THIS LINE:
     # entrypoint: dbt
     command: python -m dbt build
+  
+  terraform-cli:
+    build:
+      context: . # Build from the project root where Dockerfile.terraform is
+      dockerfile: Dockerfile.terraform
+    container_name: spond-terraform-cli
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # These environment variables are for Terraform's PostgreSQL provider
+      # They tell Terraform how to connect to the initial 'postgres' database
+      TF_VAR_PG_HOST: db
+      TF_VAR_PG_PORT: 5432
+      TF_VAR_PG_USER: postgres
+      TF_VAR_PG_PASSWORD: postgres
+      TF_VAR_PG_DBNAME: postgres # Terraform will connect to the default 'postgres' database to create 'spond_analytics'
+    volumes:
+      - ./terraform:/usr/src/app/terraform # Mount your terraform project directory
+    working_dir: /usr/src/app/terraform # Set the working directory inside the container to your terraform folder
 
 volumes:
   postgres_data:
