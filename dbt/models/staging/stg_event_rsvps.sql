@@ -14,4 +14,4 @@ WHERE
     event_rsvps.rsvp_status IN ('0', '1', '2') AND
     event_rsvps.event_rsvp_id IS NOT NULL AND
     vent_rsvps.event_id IS NOT NULL AND
-    (CASE WHEN event_rsvps.membership_id IS NOT NULL
+    event_rsvps.membership_id IS NOT NULL
