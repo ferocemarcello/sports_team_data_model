@@ -85,6 +85,7 @@ To stop and remove all the running services and files, you can run the following
 
 ```bash
 docker-compose down -v
+```
 
 ### 4. Running Specific dbt Stages (Optional)
 
