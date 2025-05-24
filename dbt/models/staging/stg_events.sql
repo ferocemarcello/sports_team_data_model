@@ -1,6 +1,6 @@
 -- dbt/models/staging/stg_events.sql
 SELECT
-    events.event_id AS event_id
+    events.event_id AS event_id,
     events.team_id AS team_id,
     EXTRACT(EPOCH FROM events.event_start)::BIGINT AS event_start,
     EXTRACT(EPOCH FROM events.event_end)::BIGINT AS event_end,
