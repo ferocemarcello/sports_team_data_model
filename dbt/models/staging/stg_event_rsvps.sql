@@ -1,16 +1,13 @@
--- dbt/models/staging/event_rsvps.sql
+-- dbt/models/staging/stg_event_rsvps.sql
 SELECT
     event_rsvps.event_rsvp_id,
     event_rsvps.event_id,
     event_rsvps.membership_id,
     event_rsvps.rsvp_status,
-    TRY_CAST(event_rsvps.responded_at AS TIMESTAMPTZ) AS responded_at -- Cast to TIMESTAMPTZ
+    -- Use CASE for robust type casting for responded_at
+    CASE WHEN event_rsvps.responded_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN event_rsvps.responded_at::TIMESTAMPTZ ELSE NULL END AS rsvp_time
 FROM
     {{ ref('event_rsvps') }} AS event_rsvps
-INNER JOIN {{ ref('events') }} AS events -- Join to ensure event_id exists in events (now a seed)
-    ON event_rsvps.event_id = events.event_id
-INNER JOIN {{ ref('memberships') }} AS memberships -- Join to ensure membership_id exists in memberships (now a seed)
-    ON event_rsvps.membership_id = memberships.membership_id
 WHERE
     event_rsvps.rsvp_status IN ('0', '1', '2') AND
-    TRY_CAST(event_rsvps.responded_at AS TIMESTAMPTZ) IS NOT NULL
+    (CASE WHEN event_rsvps.responded_at ~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$' THEN event_rsvps.responded_at::TIMESTAMPTZ ELSE NULL END) IS NOT NULL

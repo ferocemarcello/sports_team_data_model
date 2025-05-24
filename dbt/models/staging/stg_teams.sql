@@ -16,7 +16,7 @@ FROM
     {{ ref('teams') }} AS teams
 INNER JOIN {{ ref('country_codes') }} AS valid_country_codes
     -- IMPORTANT: Use double quotes for 'alpha-3' because of the hyphen in the column name from your CSV
-    ON teams.country_code = valid_country_codes."alpha-3"
+    ON teams.country_code = valid_country_codes.alpha_3
 WHERE
     -- Filter out rows where team_id was not a valid INT (i.e., became NULL after the CASE statement)
     (CASE WHEN teams.team_id ~ '^[0-9]+$' THEN teams.team_id::INT ELSE NULL END) IS NOT NULL

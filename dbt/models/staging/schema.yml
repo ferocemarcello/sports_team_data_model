@@ -37,3 +37,21 @@ models:
         description: Alpha-3 country code of the team's origin.
       - name: created_at
         description: UTC timestamp of when the team record was created (ISO 8601 format).
+  - name: stg_memberships
+    description: Staging model for memberships data.
+    columns:
+      - name: membership_id
+        tests:
+          - not_null
+          - unique
+      - name: team_id
+        tests:
+          - not_null
+      - name: user_id
+        tests:
+          - not_null
+      - name: role_title
+        description: "The role or title of the member within the team."
+      - name: created_at
+        tests:
+          - not_null
