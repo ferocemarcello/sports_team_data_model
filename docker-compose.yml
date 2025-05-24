@@ -5,15 +5,15 @@ services:
     image: postgres:16-alpine
     container_name: spond-postgres
     environment:
-      POSTGRES_DB: spond_analytics
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DBNAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d spond_analytics"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DBNAME}"] # Use variables here too
       interval: 5s
       timeout: 5s
       retries: 5
@@ -28,38 +28,34 @@ services:
         condition: service_healthy
     environment:
       DBT_POSTGRES_HOST: db
-      DBT_POSTGRES_PORT: 5432
-      DBT_POSTGRES_USER: postgres
-      DBT_POSTGRES_PASSWORD: postgres
-      DBT_POSTGRES_DBNAME: spond_analytics
-      DBT_POSTGRES_SCHEMA: public
+      DBT_POSTGRES_PORT: ${POSTGRES_PORT}
+      DBT_POSTGRES_USER: ${POSTGRES_USER}
+      DBT_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DBT_POSTGRES_DBNAME: ${POSTGRES_DBNAME}
+      DBT_POSTGRES_SCHEMA: ${POSTGRES_SCHEMA}
     volumes:
       - ./dbt:/usr/app/dbt
       - ./dbt/profiles.yml:/root/.dbt/profiles.yml:ro
     working_dir: /usr/app/dbt
-    # REMOVE THIS LINE:
-    # entrypoint: dbt
     command: python -m dbt build
   
   terraform-cli:
     build:
-      context: . # Build from the project root where Dockerfile.terraform is
+      context: .
       dockerfile: Dockerfile.terraform
     container_name: spond-terraform-cli
     depends_on:
       db:
         condition: service_healthy
     environment:
-      # These environment variables are for Terraform's PostgreSQL provider
-      # They tell Terraform how to connect to the initial 'postgres' database
       TF_VAR_PG_HOST: db
-      TF_VAR_PG_PORT: 5432
-      TF_VAR_PG_USER: postgres
-      TF_VAR_PG_PASSWORD: postgres
-      TF_VAR_PG_DBNAME: postgres # Terraform will connect to the default 'postgres' database to create 'spond_analytics'
+      TF_VAR_PG_PORT: ${POSTGRES_PORT}
+      TF_VAR_PG_USER: ${POSTGRES_USER}
+      TF_VAR_PG_PASSWORD: ${POSTGRES_PASSWORD}
+      TF_VAR_PG_DBNAME: postgres
     volumes:
-      - ./terraform:/usr/src/app/terraform # Mount your terraform project directory
-    working_dir: /usr/src/app/terraform # Set the working directory inside the container to your terraform folder
+      - ./terraform:/usr/src/app/terraform
+    working_dir: /usr/src/app/terraform
 
 volumes:
   postgres_data:

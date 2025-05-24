@@ -418,3 +418,6 @@ terraform/.terraformrc # Ignore Terraform CLI configuration file
 *.tfstate
 *.tfstate.*
 .terraform.lock.hcl
+
+
+.env
