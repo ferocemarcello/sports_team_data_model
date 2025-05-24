@@ -1,102 +1,136 @@
 #!/bin/bash
 
-# Define directories
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
+# --- Configuration Variables ---
+# Define directories (assuming .env is in the same directory as this script and docker-compose.yml)
 TERRAFORM_DIR="./terraform"
 
-echo "--- Setting up PostgreSQL with Docker Compose and Terraform ---"
+echo "--- Starting Spond Data Pipeline Setup ---"
 
 # 1. Stop and remove existing Docker Compose services and volumes for a clean start
-echo "Stopping and removing existing Docker Compose services and volumes"
+echo "1. Ensuring a clean Docker environment (stopping services and wiping all data volumes)..."
+# 'docker-compose down -v' stops and removes containers, networks, AND named volumes.
+# This ensures a completely fresh database instance every time the script runs.
 docker-compose down -v
+echo "   Docker Compose environment is now clean."
 
-# 2. Start ONLY the PostgreSQL database service in detached mode
-echo "Starting PostgreSQL database service..."
+# 2. Start ONLY the PostgreSQL database service
+echo "2. Starting PostgreSQL database service..."
+# 'docker-compose up -d' starts services in detached mode.
+# '--build' ensures the image is rebuilt if its Dockerfile or context changes.
+# '--remove-orphans' removes services not defined in the Compose file (good for iterative development).
+# 'db' specifies to only start the 'db' service.
 docker-compose up -d --build --remove-orphans db
 if [ $? -ne 0 ]; then
-  echo "Failed to start database service."
+  echo "ERROR: Failed to start database service."
   exit 1
 fi
+echo "   PostgreSQL database service started."
 
-echo "Waiting for PostgreSQL database to be healthy..."
-MAX_RETRIES=20
-RETRY_INTERVAL=3
+# 3. Wait for PostgreSQL database to be healthy
+echo "3. Waiting for PostgreSQL database to become healthy..."
+MAX_RETRIES=30 # Increased retries for robustness against slow DB startups
+RETRY_INTERVAL=2 # Seconds
 for i in $(seq 1 $MAX_RETRIES); do
+  # Use 'docker exec' to run pg_isready directly inside the 'spond-postgres' container.
+  # This checks if the default 'postgres' database is ready to accept connections.
+  # We use the default 'postgres' user/db as the target 'spond_analytics' isn't created yet.
   if docker exec spond-postgres pg_isready -U postgres -d postgres; then
-    echo "PostgreSQL database is up and healthy."
+    echo "   PostgreSQL database is up and healthy."
     break
   else
-    echo "PostgreSQL is not ready yet. Retrying in $RETRY_INTERVAL seconds..."
+    echo "   PostgreSQL is not ready yet. Retrying in $RETRY_INTERVAL seconds... (Attempt $i/$MAX_RETRIES)"
     sleep $RETRY_INTERVAL
   fi
   if [ $i -eq $MAX_RETRIES ]; then
-    echo "PostgreSQL database did not become healthy within the timeout."
+    echo "ERROR: PostgreSQL database did not become healthy within the timeout."
     exit 1
   fi
 done
 
-# 3. Explicitly drop the application database if it exists, to ensure a clean slate for Terraform
-echo "Ensuring clean database state: Dropping 'spond_analytics' if it exists..."
+# 4. Explicitly drop the application database if it exists, to ensure a clean slate for Terraform
+echo "4. Ensuring clean application database state: Dropping 'spond_analytics' if it exists..."
+# Connect to the default 'postgres' database to drop 'spond_analytics'.
+# 'WITH (FORCE)' disconnects any active sessions before dropping, preventing lock issues.
 docker exec -i spond-postgres psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS spond_analytics WITH (FORCE);"
 if [ $? -ne 0 ]; then
-  echo "Failed to drop database 'spond_analytics'."
+  echo "ERROR: Failed to drop database 'spond_analytics'."
   exit 1
 fi
-echo "Database 'spond_analytics' dropped (if it existed)."
+echo "   Database 'spond_analytics' dropped (if it existed)."
 
+# 5. Initialize Terraform and apply configuration to create the application database and other resources
+echo "5. Initializing and applying Terraform configuration..."
+# Remove existing local Terraform state files to ensure a fresh run.
+# This is crucial if you are not using remote state management.
+rm -f "$TERRAFORM_DIR"/terraform.tfstate*
+echo "   Local Terraform state files cleaned."
 
-# 4. Initialize Terraform and apply configuration to create the application database using the container
-echo "Initializing Terraform..."
-rm -f "$TERRAFORM_DIR"/terraform.tfstate* # Clean up existing state on host
-# Use the absolute path to terraform, which is now /usr/local/bin/terraform
-docker-compose run --rm terraform-cli /usr/local/bin/terraform init # <--- UPDATED PATH
+# Run Terraform init (ensure 'terraform-cli' service is up and its image is built)
+docker-compose run --rm terraform-cli /usr/local/bin/terraform init
 if [ $? -ne 0 ]; then
-  echo "Terraform initialization failed."
+  echo "ERROR: Terraform initialization failed."
   exit 1
 fi
-echo "Applying Terraform configuration to create database..."
-# Use the absolute path to terraform
-docker-compose run --rm terraform-cli /usr/local/bin/terraform apply -auto-approve -target=postgresql_database.spond_analytics # <--- UPDATED PATH
+echo "   Terraform initialized."
+
+# Run Terraform apply to create the database and other specified resources.
+# '-auto-approve' skips interactive approval.
+# '-target=postgresql_database.spond_analytics' ensures only the DB resource is managed,
+# which is good if you have other Terraform resources you don't want to touch every run.
+docker-compose run --rm terraform-cli /usr/local/bin/terraform apply -auto-approve -target=postgresql_database.spond_analytics
 if [ $? -ne 0 ]; then
-  echo "Terraform apply failed."
+  echo "ERROR: Terraform apply failed."
   exit 1
 fi
+echo "   Terraform configuration applied, 'spond_analytics' database created."
 
-echo "--- Proceeding with dbt actions ---"
+echo "--- Proceeding with dbt data transformations ---"
 
-# 5. Clean dbt artifacts (important before subsequent dbt commands)
-echo "Cleaning dbt artifacts..."
+# 6. Clean dbt artifacts (important before subsequent dbt commands)
+echo "6. Cleaning dbt artifacts (target folder, etc.)..."
+# 'dbt clean' removes local dbt compilation artifacts for a fresh build.
 docker-compose run --rm dbt-cli dbt clean --project-dir /usr/app/dbt
 if [ $? -ne 0 ]; then
-  echo "dbt clean failed."
+  echo "ERROR: dbt clean failed."
   exit 1
 fi
-echo "dbt clean completed successfully."
+echo "   dbt artifacts cleaned."
 
-# 6. Run dbt seed to load all CSV files as tables
-echo "Running dbt seed to load all static data (CSVs)..."
+# 7. Run dbt seed to load all CSV files as tables
+echo "7. Running dbt seed to load all static data (CSVs) into the database..."
+# 'dbt seed' loads data from CSVs into tables based on profiles.yml configuration.
 docker-compose run --rm dbt-cli dbt seed --project-dir /usr/app/dbt
 if [ $? -ne 0 ]; then
-  echo "dbt seed failed."
+  echo "ERROR: dbt seed failed."
   exit 1
 fi
-echo "dbt seed completed successfully, CSVs loaded as tables."
+echo "   dbt seed completed successfully, CSVs loaded."
 
-# 7. Run dbt build to create all models (staging, marts) and run tests
-echo "Running dbt build to create all models and run tests..."
+# 8. Run dbt build to create all models (staging, marts) and run tests
+echo "8. Running dbt build to create all models and run tests..."
+# 'dbt build' runs dbt's compile, run, and test commands sequentially.
 docker-compose run --rm dbt-cli dbt build --target dev
 if [ $? -ne 0 ]; then
-  echo "dbt build failed."
+  echo "ERROR: dbt build failed."
   exit 1
 fi
-echo "dbt build completed successfully, all models built and tested."
+echo "   dbt build completed successfully, all models built and tested."
 
-echo "--- Pipeline Execution Complete ---"
+echo "--- Spond Data Pipeline Execution Complete ---"
 
-echo "--- Verification ---"
-echo "You can connect to the database to verify data:"
-echo "psql -h localhost -p 5432 -U postgres -d spond_analytics"
-echo "Then run queries like: "
+echo "--- Verification Instructions ---"
+echo "You can now connect to the database to verify data (using your .env values):"
+# Note: ${POSTGRES_PORT}, ${POSTGRES_USER}, ${POSTGRES_DBNAME} are read by your shell
+# from the .env file when you execute docker-compose commands.
+echo "psql -h localhost -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DBNAME}"
+echo "Then run queries like:"
 echo "SELECT COUNT(*) FROM public.stg_teams;"
 echo "SELECT COUNT(*) FROM public.stg_memberships;"
 echo "SELECT COUNT(*) FROM public.stg_events;"
 echo "SELECT COUNT(*) FROM public.stg_event_rsvps;"
+echo ""
+echo "Note: The Docker Compose services (PostgreSQL, etc.) are still running in the background."
+echo "You can shut them down manually at any time with 'docker-compose down'."
