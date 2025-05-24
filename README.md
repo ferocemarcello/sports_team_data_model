@@ -37,7 +37,6 @@ To set up and run the data ingestion process, follow these steps:
 Before you begin, ensure you have the following installed on your system:
 
 * **Docker:** Used for containerizing the PostgreSQL database and the Python ingestion application.
-* **Terraform:** Used for provisioning the PostgreSQL database and tables.
 
 #### Docker Permissions
 
