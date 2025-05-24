@@ -13,5 +13,5 @@ INNER JOIN {{ ref('stg_memberships') }} AS memberships -- Join to the STAGING me
 WHERE
     event_rsvps.rsvp_status IN ('0', '1', '2') AND
     event_rsvps.event_rsvp_id IS NOT NULL AND
-    vent_rsvps.event_id IS NOT NULL AND
+    event_rsvps.event_id IS NOT NULL AND
     event_rsvps.membership_id IS NOT NULL
