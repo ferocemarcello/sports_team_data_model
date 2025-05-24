@@ -13,7 +13,7 @@ WITH recent_rsvps AS (
 )
 SELECT
     -- Calculate the overall attendance rate as (total accepted / total responses)
-    CAST(SUM(CASE WHEN rsvp_status = 'accepted' THEN 1 ELSE 0 END) AS DECIMAL) /
+    CAST(SUM(CASE WHEN rsvp_status = 1 THEN 1 ELSE 0 END) AS DECIMAL) / -- This line must use '1'
     NULLIF(COUNT(*), 0) AS overall_attendance_rate_30_days
 FROM
     recent_rsvps

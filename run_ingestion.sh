@@ -64,7 +64,16 @@ fi
 
 echo "--- Proceeding with dbt actions ---"
 
-# 5. Run dbt seed to load all CSV files as tables
+# 5. Clean dbt artifacts (important before subsequent dbt commands)
+echo "Cleaning dbt artifacts..."
+docker-compose run --rm dbt-cli dbt clean --project-dir /usr/app/dbt
+if [ $? -ne 0 ]; then
+  echo "dbt clean failed."
+  exit 1
+fi
+echo "dbt clean completed successfully."
+
+# 6. Run dbt seed to load all CSV files as tables
 echo "Running dbt seed to load all static data (CSVs)..."
 docker-compose run --rm dbt-cli dbt seed --project-dir /usr/app/dbt
 if [ $? -ne 0 ]; then
@@ -73,22 +82,14 @@ if [ $? -ne 0 ]; then
 fi
 echo "dbt seed completed successfully, CSVs loaded as tables."
 
-# 6. Clean dbt artifacts (important after refactoring/renaming)
-echo "Cleaning dbt artifacts..."
-docker-compose run --rm dbt-cli dbt clean --project-dir /usr/app/dbt
-if [ $? -ne 0 ]; then
-  echo "dbt clean failed."
-  exit 1
-fi
-
-# 7. Run dbt to build models and tests
-echo "Running dbt transformations and tests..."
+# 7. Run dbt build to create all models (staging, marts) and run tests
+echo "Running dbt build to create all models and run tests..."
 docker-compose run --rm dbt-cli dbt build --target dev
 if [ $? -ne 0 ]; then
   echo "dbt build failed."
   exit 1
 fi
-echo "dbt transformations and tests completed successfully."
+echo "dbt build completed successfully, all models built and tested."
 
 echo "--- Pipeline Execution Complete ---"
 
