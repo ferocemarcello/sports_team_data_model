@@ -1,0 +1,14 @@
+FROM alpine:latest
+
+ARG TERRAFORM_VERSION="1.8.0"
+
+RUN apk add --no-cache curl unzip \
+    # Download the Terraform binary for Linux AMD64
+    && curl -LO "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" \
+    && unzip "terraform_${TERRAFORM_VERSION}_linux_amd64.zip" -d /usr/local/bin \
+    # Clean up the downloaded zip file
+    && rm "terraform_${TERRAFORM_VERSION}_linux_amd64.zip" \
+    && chmod +x /usr/local/bin/terraform
+
+# Set the working directory inside the container to the terraform folder
+WORKDIR /usr/src/app/terraform

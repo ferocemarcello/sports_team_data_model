@@ -1,0 +1,80 @@
+seeds:
+  - name: country_codes
+    description: "List of valid ISO 3166-1 country codes and associated data."
+    columns:
+      - name: name
+        description: "The full country name."
+        tests:
+          - not_null
+          - unique
+      - name: alpha_two
+        description: "The 2-letter Alpha-2 country code."
+        tests:
+          - not_null
+          - unique
+      - name: alpha_three
+        description: "The 3-letter Alpha-3 country code. Used for filtering teams."
+        tests:
+          - not_null
+          - unique
+      - name: country_code
+        description: "The numeric country code."
+        tests:
+          - unique
+      - name: iso
+        description: "ISO 3166-2 subdivision code (e.g., US-CA)."
+      - name: region
+        description: "Geographic region."
+      - name: sub_region
+        description: "Geographic sub-region."
+      - name: intermediate_region
+        description: "Geographic intermediate-region."
+      - name: region_code
+        description: "Numeric region code."
+      - name: sub_region_code
+        description: "Numeric sub-region code."
+      - name: intermediate_region_code
+        description: "Numeric intermediate-region code."
+
+  - name: teams
+    description: "Raw data for teams from CSV. Loaded as-is."
+    columns:
+      - name: team_id
+        description: "Raw team ID string (will be cast to INT in staging)."
+      - name: team_activity
+        description: "Raw team activity string."
+      - name: country_code
+        description: "Raw country code string."
+      - name: created_at
+        description: "Raw created at timestamp string (will be cast to TIMESTAMPTZ in staging)."
+
+  - name: memberships
+    description: "Raw data for memberships from CSV. Loaded as-is."
+    columns:
+      - name: membership_id
+        tests:
+          - not_null
+          - unique
+      - name: team_id
+      - name: role_title
+      - name: joined_at
+
+  - name: events
+    description: "Raw data for events from CSV. Loaded as-is."
+    columns:
+      - name: event_id
+      - name: team_id
+      - name: event_start
+      - name: event_end
+      - name: latitude
+      - name: longitude
+      - name: created_at
+
+  - name: event_rsvps
+    description: "Raw data for event RSVPs from CSV. Loaded as-is."
+    columns:
+      - name: event_rsvp_id
+      - name: event_id
+      - name: membership_id
+      - name: rsvp_status
+      - name: responded_at
