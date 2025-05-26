@@ -1,6 +1,6 @@
 ## Data Description
 
-The project utilizes three sample datasets in CSV format. The schema for these tables is as follows:
+The project utilizes four sample datasets in CSV format. The schema for these tables is as follows:
 
 | Table         | Column              | Description                                                                 |
 |---------------|---------------------|-----------------------------------------------------------------------------|
@@ -26,7 +26,7 @@ The project utilizes three sample datasets in CSV format. The schema for these t
 ## Data Ingestion
 
 * **Database Setup:** PostgreSQL is set up using Terraform, ensuring a consistent and reproducible database schema.
-* **Containerization:** The entire ingestion process runs within a Docker container built on `python:3.12-slim-bookworm` for portability and isolation.
+* **Containerization:** The entire ingestion process runs using dbt within a Docker container built on `python:3.12-slim-buster` for portability and isolation. Database tables are also built using terraform within a Docker container built on alpine
 
 ## Setup and Running Instructions
 
